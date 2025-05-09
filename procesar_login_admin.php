@@ -2,8 +2,7 @@
 require_once 'includes/config.php';
 require_once 'includes/functions.php';
 
-$page_title = "Procesar Login Admin";
-require_once 'includes/templates/header.php';
+// No incluir header.php aquí, ya que este archivo solo procesa lógica y redirecciones
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = limpiar_datos($_POST['username']);
@@ -48,18 +47,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->close();
     } else {
         // Error en la preparación de la consulta
-        error_log("Error al preparar la consulta de login: " . $conn->error);
-        $_SESSION['login_error'] = "Error interno del servidor. Por favor, inténtelo más tarde.";
+        $_SESSION['login_error'] = "Error en la base de datos.";
         header("Location: login_admin.php");
         exit;
     }
 } else {
-    // Si no es POST, redirigir al formulario de login
     header("Location: login_admin.php");
     exit;
 }
 
 $conn->close();
 ?>
-
-<?php require_once 'includes/templates/footer.php'; ?>

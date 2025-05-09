@@ -1,6 +1,9 @@
 <?php
 require_once 'includes/config.php'; // Ajuste de ruta
 require_once 'includes/functions.php'; // Ajuste de ruta
+$page_title = "Crear Nuevo Ticket"; // Definir título específico para esta página
+require_once 'includes/templates/header.php'; 
+
 
 // Proteger esta página
 // requireAdminLogin(); // Descomentar cuando el login esté implementado

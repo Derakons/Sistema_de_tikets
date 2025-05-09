@@ -66,6 +66,16 @@ $conn->query("CREATE TABLE IF NOT EXISTS tickets (
     FOREIGN KEY (id_admin_asignado) REFERENCES usuarios_admin(id) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
 
+// ALTER TABLE para agregar campos faltantes si no existen
+$conn->query("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS detalle_fallo TEXT NULL AFTER descripcion");
+$conn->query("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS descripcion_breve VARCHAR(255) NULL AFTER detalle_fallo");
+$conn->query("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS contacto_solicitante VARCHAR(100) NULL AFTER nombre_solicitante");
+$conn->query("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS departamento_id INT NULL AFTER id");
+$conn->query("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS identificacion_tipo VARCHAR(50) NULL AFTER prioridad");
+$conn->query("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS diagnostico TEXT NULL AFTER identificacion_tipo");
+$conn->query("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS cierre_solucion TEXT NULL AFTER diagnostico");
+$conn->query("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS fecha_actualizacion_admin DATETIME NULL AFTER ultima_actualizacion");
+
 // Verificar si la conexión fue exitosa
 $conn->query("SET NAMES 'utf8mb4'"); // Establecer el charset a utf8mb4 para soportar caracteres especiales y emojis
 $conn->set_charset("utf8mb4");
