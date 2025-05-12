@@ -17,7 +17,8 @@ Este sistema permite la creación, seguimiento y gestión de tickets de soporte 
   - Panel de administración con listado completo de tickets
   - Actualización de estado, diagnóstico y solución aplicada
   - Clasificación de tickets por prioridad
-  - Generación de informes de resolución
+  - Generación de informes de resolución con opciones de impresión
+  - Impresión directa o generación de PDF de tickets resueltos
 
 ## Requisitos Técnicos
 
@@ -42,14 +43,21 @@ Este sistema permite la creación, seguimiento y gestión de tickets de soporte 
 Sistema_de_tikets/
 ├── admin.php             # Panel de administración
 ├── generar_informe.php   # Generador de informes de resolución
+├── generar_informe_v2.php # Versión mejorada del generador de informes
 ├── guardar_ticket.php    # Procesamiento de nuevos tickets
+├── imprimir_informe.php  # Versión optimizada para impresión de informes
 ├── index.php             # Página principal - Creación de tickets
 ├── login_admin.php       # Acceso a panel de administración
 ├── logout_admin.php      # Cierre de sesión
+├── pdf_generator.php     # Utilidades para generar PDF
 ├── procesar_login_admin.php  # Procesamiento de credenciales
 ├── seguimiento.php       # Seguimiento de tickets para usuarios
 ├── setup.php             # Configuración inicial del sistema
 ├── assets/               # Recursos CSS y JavaScript
+│   ├── css/              # Hojas de estilo
+│   │   ├── style.css     # Estilos principales
+│   │   └── print-styles.css # Estilos específicos para impresión
+│   └── js/               # Scripts JavaScript
 ├── img/                  # Imágenes y logos
 └── includes/             # Funciones, configuración y plantillas
 ```
@@ -58,6 +66,16 @@ Sistema_de_tikets/
 
 1. **Usuarios**: Acceder a la página principal para crear tickets o a la sección de seguimiento para consultar el estado de un ticket existente.
 2. **Administradores**: Iniciar sesión en el panel de administración para gestionar tickets, actualizar estados y generar informes.
+
+### Funcionalidades de Impresión y PDF
+
+El sistema ofrece varias opciones para la generación de reportes e impresión:
+
+1. **Impresión Directa**: Desde el panel de administración, para tickets resueltos o cerrados, puede hacer clic en "Imprimir Directo" para acceder a una versión optimizada para impresión que se abrirá automáticamente en el diálogo de impresión.
+
+2. **Generación de PDF**: En la vista de informe detallado, puede hacer clic en "Generar PDF" para acceder a una interfaz que le guiará en el proceso de guardar el informe como PDF utilizando la función nativa del navegador.
+
+3. **Exportación de Texto**: En la vista detallada del informe, también puede copiar el texto del informe para pegarlo en otro documento o enviarlo por correo electrónico.
 
 ## Seguridad
 

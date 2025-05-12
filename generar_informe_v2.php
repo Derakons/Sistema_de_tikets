@@ -273,6 +273,7 @@ $conn->close();
             background-color: #f4f7f9;
             color: #333;
             margin: 0;
+            padding: 20px;
             line-height: 1.6;
         }
         
@@ -935,9 +936,10 @@ $conn->close();
                             </div>
                         </div>
                     </div>
-                </div>                <a href="imprimir_informe.php?ticket_id=<?php echo $id_ticket; ?>" target="_blank" class="btn btn-primary no-print" style="float: right; margin-bottom: 15px;">
-                    <i class="fas fa-print"></i> Versión para Imprimir
-                </a>
+                </div>
+                  <button onclick="window.print();" class="btn btn-primary no-print" style="float: right; margin-bottom: 15px;">
+                    <i class="fas fa-print"></i> Imprimir Texto Simple
+                </button>
                   <form id="form-editar-notificacion" class="formulario-notificacion" method="post" style="clear:both; margin-bottom:0;">
                     <textarea id="notificacion-editable" name="notificacion_editable" wrap="hard" class="texto-para-imprimir"><?php echo $report_content; ?></textarea>
                     

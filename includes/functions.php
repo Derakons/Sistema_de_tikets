@@ -9,25 +9,23 @@ function limpiar_datos($dato) {
     return $dato;
 }
 
-// Función para generar un número de ticket único (ejemplo básico)
+// Función para generar un número de ticket único
 function generar_numero_ticket($conn) {
-    // Formato: TICKET-XXX (donde XXX es un número secuencial de 3 dígitos)
+    // Formato: TICKET-XXXX (donde XXXX es un número secuencial de 4 dígitos)
     $prefijo = "TICKET";
     $numero_secuencial = 1;
 
-    // Intentar obtener el último número para este día y sumarle 1
-    // Esto es una simplificación, en un sistema real se necesitaría un mejor control de concurrencia
-    $sql = "SELECT id FROM tickets WHERE id LIKE ? ORDER BY id DESC LIMIT 1";
+    // Intentar obtener el último ticket y extraer su número para incrementarlo
+    $sql = "SELECT id FROM tickets ORDER BY id DESC LIMIT 1";
     $stmt = $conn->prepare($sql);
-    $param = $prefijo . "%";
-    $stmt->bind_param("s", $param);
     $stmt->execute();
     $resultado = $stmt->get_result();
+    
     if ($fila = $resultado->fetch_assoc()) {
         $ultimo_numero_completo = $fila['id'];
-        $partes = explode('-', $ultimo_numero_completo);
-        if (count($partes) === 3) {
-            $numero_secuencial = intval(end($partes)) + 1;
+        // Extraer el número secuencial del ID (formato TICKET-XXXX)
+        if (preg_match('/' . $prefijo . '-(\d+)/', $ultimo_numero_completo, $matches)) {
+            $numero_secuencial = intval($matches[1]) + 1;
         }
     }
     $stmt->close();
@@ -93,6 +91,36 @@ function obtener_departamentos($conn) {
         }
     }
     return $departamentos;
+}
+
+// Función para generar el cuerpo de un informe tipo notificación para correo
+function generar_informe_notificacion($ticket_data) {
+    $fecha_actual = date('Y-m-d');
+    $fecha_cierre = $ticket_data['fecha_cierre'] ? date('Y-m-d', strtotime($ticket_data['fecha_cierre'])) : 'N/A';
+    $correo = $ticket_data['email_solicitante'] ?? 'N/A';
+    $id_ticket = $ticket_data['id'] ?? 'N/A';
+    $nombre = $ticket_data['nombre_solicitante'] ?? 'Usuario';
+    $departamento = $ticket_data['nombre_departamento'] ?? 'N/A';
+    $asunto = $ticket_data['descripcion_breve'] ?? ($ticket_data['asunto'] ?? '');
+    $detalle = $ticket_data['detalle_fallo'] ?? '';
+    $solucion = $ticket_data['cierre_solucion'] ?? '';
+    $estado = $ticket_data['estado'] ?? '';
+    $fecha_creacion = $ticket_data['fecha_creacion'] ? date('Y-m-d', strtotime($ticket_data['fecha_creacion'])) : 'N/A';
+    return "*Notificación de cierre de ticket en el Sistema de Tickets de la Municipalidad Provincial de Canchis*\n\n"
+    . "Hola. Este es un mensaje del Sistema de Tickets de Soporte TI.\n\n"
+    . "Según la política institucional, su ticket *$id_ticket* ha sido cerrado el *$fecha_cierre*.\n"
+    . "A continuación, el resumen de su caso:\n\n"
+    . "*Departamento:* $departamento\n"
+    . "*Asunto:* $asunto\n"
+    . "*Detalle reportado:* $detalle\n"
+    . "*Solución aplicada:* $solucion\n"
+    . "*Estado final:* $estado\n"
+    . "*Fecha de creación:* $fecha_creacion\n"
+    . "*Fecha de cierre:* $fecha_cierre\n\n"
+    . "Si tiene alguna pregunta sobre este ticket, puede responder a este correo o comunicarse con el área de TI de la Municipalidad.\n\n"
+    . "Una vez más, gracias por usar el Sistema de Tickets de la Municipalidad Provincial de Canchis.\n\n"
+    . "📧 Correo registrado: *$correo*\n"
+    . "📅 Este mensaje se generó el *$fecha_actual*\n";
 }
 
 ?>

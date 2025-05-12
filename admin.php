@@ -68,7 +68,7 @@ if (isset($_GET['edit_id'])) {
     $edit_ticket_id = limpiar_datos($_GET['edit_id']);
     $sql_edit = "SELECT t.*, d.nombre_departamento 
                  FROM tickets t 
-                 LEFT JOIN departamentos d ON t.departamento_id = d.id 
+                 LEFT JOIN departamentos d ON t.id_departamento = d.id 
                  WHERE t.id = ?";
     $stmt_edit = $conn->prepare($sql_edit);
     if ($stmt_edit) {
@@ -109,47 +109,371 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Administrador - Sistema de Tickets</title>
-    <link rel="stylesheet" href="assets/css/style.css"> <!-- Ruta correcta si admin.php está en la raíz -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #0066cc;
+            --secondary-color: #28a745;
+            --tertiary-color: #6c757d;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-color: #f8f9fa;
+            --dark-color: #2c3e50;
+            --border-color: #e0e0e0;
+            --shadow-color: rgba(0,0,0,0.07);
+        }
+        
+        .container-main {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 6px 18px var(--shadow-color);
+        }
+        
         .edit-form-container {
             margin-top: 30px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: #f9f9f9;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
-        .info-original { background-color: #eef; padding: 10px; border-radius: 4px; margin-bottom:15px;}
-        .info-original p { margin: 5px 0; }
+        
+        .info-original { 
+            background-color: #f0f7ff;
+            padding: 15px; 
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .info-original h4 {
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+        }
+        
+        .info-original p { 
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+        
+        /* Estilos para la tabla de tickets */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        thead {
+            background-color: #f8f9fa;
+        }
+        
+        th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.95em;
+            color: var(--dark-color);
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.95em;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        /* Botones y badges para estados */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            padding: 8px 15px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            color: white;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #0052a3;
+        }
+        
+        .btn-success {
+            background-color: var(--secondary-color);
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .btn-info {
+            background-color: #17a2b8;
+        }
+        
+        .btn-info:hover {
+            background-color: #138496;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+        
+        .btn-danger:hover {
+            background-color: #bd2130;
+        }
+        
+        .btn-secondary {
+            background-color: var(--tertiary-color);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        .btn-sm {
+            padding: 6px 10px;
+            font-size: 0.85em;
+        }
+        
+        .estado-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        
+        .estado-abierto {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        
+        .estado-en-progreso {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        
+        .estado-esperando {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .estado-resuelto {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+        
+        .estado-cerrado {
+            background-color: #cfe2ff;
+            color: #0a58ca;
+        }
+        
+        .prioridad-alta, .prioridad-muy-grave {
+            background-color: #f8d7da;
+            color: #721c24;
+            font-weight: bold;
+        }
+        
+        .prioridad-media, .prioridad-grave {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .prioridad-baja, .prioridad-leve {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+        
+        /* Filtros de búsqueda */
+        .filtros-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .filtro-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .filtro-label {
+            font-weight: 600;
+            font-size: 0.9em;
+            color: var(--dark-color);
+        }
+        
+        .filtro-select {
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: white;
+        }
+        
+        /* Mensajes de alerta */
+        .alert {
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border-left: 4px solid;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left-color: #c3e6cb;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left-color: #f5c6cb;
+        }
+        
+        /* Encabezados de sección */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .section-title {
+            font-size: 1.5em;
+            color: var(--primary-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: var(--primary-color);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .container-main {
+                padding: 15px;
+            }
+            
+            td, th {
+                padding: 10px;
+            }
+            
+            .btn {
+                padding: 6px 10px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .filtros-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .action-buttons {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Panel de Administración de Tickets</h1>
-        <!-- <p><a href="logout_admin.php">Cerrar Sesión</a></p> Descomentar cuando el login esté implementado -->
+    <div class="container-main">
+        <div class="section-header">
+            <h1 class="section-title"><i class="fas fa-tachometer-alt"></i> Panel de Administración de Tickets</h1>
+            <div class="action-buttons">
+                <a href="index.php" class="btn btn-primary"><i class="fas fa-home"></i> Inicio</a>
+                <!-- <a href="logout_admin.php" class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a> Descomentar cuando el login esté implementado -->
+            </div>
+        </div>
 
         <?php if (!empty($success_message)): ?>
-            <div class="ticket-status" style="background-color: #d4edda; color: #155724; border-color: #c3e6cb; padding: 10px; margin-bottom:15px; border-radius: 5px;">
-                <?php echo $success_message; ?>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> <?php echo $success_message; ?>
             </div>
         <?php endif; ?>
         <?php if (!empty($error_message)): ?>
-            <div class="ticket-status" style="background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; padding: 10px; margin-bottom:15px; border-radius: 5px;">
-                <p><strong>Error:</strong> <?php echo $error_message; ?></p>
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> <strong>Error:</strong> <?php echo $error_message; ?>
             </div>
-        <?php endif; ?>
-
-        <?php if ($edit_ticket_id && $current_ticket): ?>
+        <?php endif; ?>        <?php if ($edit_ticket_id && $current_ticket): ?>
             <div class="edit-form-container">
-                <h2>Editando Ticket: <?php echo htmlspecialchars($current_ticket['id']); ?></h2>
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-edit"></i> Editando Ticket: #<?php echo htmlspecialchars($current_ticket['id']); ?>
+                        <span class="estado-badge estado-<?php echo strtolower(str_replace(' ', '-', $current_ticket['estado'])); ?>">
+                            <?php echo htmlspecialchars($current_ticket['estado']); ?>
+                        </span>
+                    </h2>
+                </div>
                 
                 <div class="info-original">
-                    <h4>Información Original del Usuario:</h4>
+                    <h4><i class="fas fa-info-circle"></i> Información Original del Usuario:</h4>
                     <p><strong>Fecha Creación:</strong> <?php echo htmlspecialchars(date("d/m/Y H:i", strtotime($current_ticket['fecha_creacion']))); ?></p>
                     <p><strong>Departamento:</strong> <?php echo htmlspecialchars($current_ticket['nombre_departamento']); ?></p>
                     <p><strong>Solicitante:</strong> <?php echo htmlspecialchars($current_ticket['nombre_solicitante'] ?: 'N/A'); ?></p>
                     <p><strong>Contacto:</strong> <?php echo htmlspecialchars($current_ticket['contacto_solicitante'] ?: 'N/A'); ?></p>
                     <p><strong>Breve Descripción:</strong> <?php echo htmlspecialchars($current_ticket['descripcion_breve']); ?></p>
-                    <p><strong>Detalle del Fallo:</strong><br><pre><?php echo htmlspecialchars($current_ticket['detalle_fallo']); ?></pre></p>
+                    <p><strong>Detalle del Fallo:</strong><br><pre style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 5px;"><?php echo htmlspecialchars($current_ticket['detalle_fallo']); ?></pre></p>
                 </div>
 
                 <form action="admin.php?edit_id=<?php echo htmlspecialchars($edit_ticket_id); ?>" method="POST">
@@ -200,26 +524,70 @@ $conn->close();
                             <option value="Resuelto" <?php echo ($current_ticket['estado'] == 'Resuelto') ? 'selected' : ''; ?>>Resuelto</option>
                             <option value="Cerrado" <?php echo ($current_ticket['estado'] == 'Cerrado') ? 'selected' : ''; ?>>Cerrado</option>
                         </select>
+                    </div>                    <div class="action-buttons" style="margin-top: 20px; display: flex; gap: 10px;">
+                        <button type="submit" name="update_ticket" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Actualizar Ticket
+                        </button>
+                        <a href="admin.php" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar Edición
+                        </a>
+                        <?php if ($current_ticket['estado'] == 'Resuelto' || $current_ticket['estado'] == 'Cerrado'): ?>
+                        <a href="generar_informe_v2.php?ticket_id=<?php echo htmlspecialchars($current_ticket['id']); ?>" target="_blank" class="btn btn-info">
+                            <i class="fas fa-file-alt"></i> Informe Detallado
+                        </a>
+                        <a href="imprimir_informe.php?ticket_id=<?php echo htmlspecialchars($current_ticket['id']); ?>" target="_blank" class="btn btn-success">
+                            <i class="fas fa-print"></i> Imprimir Directo
+                        </a>
+                        <?php endif; ?>
                     </div>
-
-                    <button type="submit" name="update_ticket" class="btn">Actualizar Ticket</button>
-                    <a href="admin.php" class="btn" style="background-color: #6c757d;">Cancelar Edición</a>
-                    <?php if ($current_ticket['estado'] == 'Resuelto' || $current_ticket['estado'] == 'Cerrado'): ?>
-                        <a href="generar_informe.php?ticket_id=<?php echo htmlspecialchars($current_ticket['id']); ?>" target="_blank" class="btn" style="background-color: #17a2b8;">Generar Informe</a>
-                    <?php endif; ?>
                 </form>
             </div>
-        <?php endif; ?>
-
-        <h2>Listado de Tickets</h2>
-        <!-- Aquí podrías agregar filtros si lo deseas -->
-        <table>
+        <?php endif; ?>        <div class="section-header">
+            <h2 class="section-title"><i class="fas fa-list-alt"></i> Listado de Tickets</h2>
+        </div>
+        
+        <!-- Filtros de búsqueda -->
+        <div class="filtros-container">
+            <div class="filtro-item">
+                <span class="filtro-label">Estado:</span>
+                <select class="filtro-select" id="filtro-estado">
+                    <option value="">Todos</option>
+                    <option value="Abierto">Abierto</option>
+                    <option value="En Progreso">En Progreso</option>
+                    <option value="Esperando Respuesta">Esperando Respuesta</option>
+                    <option value="Resuelto">Resuelto</option>
+                    <option value="Cerrado">Cerrado</option>
+                </select>
+            </div>
+            <div class="filtro-item">
+                <span class="filtro-label">Prioridad:</span>
+                <select class="filtro-select" id="filtro-prioridad">
+                    <option value="">Todas</option>
+                    <option value="Muy Grave">Muy Grave</option>
+                    <option value="Grave">Grave</option>
+                    <option value="Leve">Leve</option>
+                    <option value="Alto">Alto</option>
+                    <option value="Medio">Medio</option>
+                    <option value="Bajo">Bajo</option>
+                </select>
+            </div>
+            <div class="filtro-item">
+                <button class="btn btn-primary btn-sm" id="btn-aplicar-filtros">
+                    <i class="fas fa-filter"></i> Aplicar Filtros
+                </button>
+                <button class="btn btn-secondary btn-sm" id="btn-limpiar-filtros">
+                    <i class="fas fa-undo"></i> Limpiar
+                </button>
+            </div>
+        </div>
+        
+        <table id="tabla-tickets">
             <thead>
                 <tr>
                     <th>N° Ticket</th>
                     <th>Fecha Creación</th>
                     <th>Departamento</th>
-                    <th>Breve Descripción</th>
+                    <th>Asunto</th>
                     <th>Estado</th>
                     <th>Prioridad</th>
                     <th>Acciones</th>
@@ -227,16 +595,40 @@ $conn->close();
             </thead>
             <tbody>
                 <?php if (count($all_tickets) > 0): ?>
-                    <?php foreach ($all_tickets as $ticket): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($ticket['id']); ?></td>
+                    <?php foreach ($all_tickets as $ticket): ?>                    <tr class="fila-ticket" 
+                        data-estado="<?php echo htmlspecialchars($ticket['estado']); ?>" 
+                        data-prioridad="<?php echo htmlspecialchars($ticket['prioridad']); ?>">
+                        <td>#<?php echo htmlspecialchars($ticket['id']); ?></td>
                         <td><?php echo htmlspecialchars(date("d/m/Y H:i", strtotime($ticket['fecha_creacion']))); ?></td>
                         <td><?php echo htmlspecialchars($ticket['nombre_departamento'] ?: 'N/A'); ?></td>
                         <td><?php echo htmlspecialchars($ticket['asunto']); ?></td>
-                        <td><?php echo htmlspecialchars($ticket['estado']); ?></td>
-                        <td><?php echo htmlspecialchars($ticket['prioridad'] ?: 'N/A'); ?></td>
                         <td>
-                            <a href="admin.php?edit_id=<?php echo htmlspecialchars($ticket['id']); ?>" class="btn" style="font-size:0.9em; padding:5px 10px;">Ver/Editar</a>
+                            <span class="estado-badge estado-<?php echo strtolower(str_replace(' ', '-', $ticket['estado'])); ?>">
+                                <?php echo htmlspecialchars($ticket['estado']); ?>
+                            </span>
+                        </td>
+                        <td>
+                            <span class="estado-badge prioridad-<?php echo strtolower(str_replace(' ', '-', $ticket['prioridad'])); ?>">
+                                <?php echo htmlspecialchars($ticket['prioridad'] ?: 'N/A'); ?>
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 5px;">
+                                <a href="admin.php?edit_id=<?php echo htmlspecialchars($ticket['id']); ?>" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
+                                
+                                <?php if ($ticket['estado'] == 'Resuelto' || $ticket['estado'] == 'Cerrado'): ?>
+                                <div class="dropdown-action">
+                                    <a href="generar_informe_v2.php?ticket_id=<?php echo htmlspecialchars($ticket['id']); ?>" target="_blank" class="btn btn-info btn-sm">
+                                        <i class="fas fa-file-alt"></i> Informe
+                                    </a>
+                                    <a href="imprimir_informe.php?ticket_id=<?php echo htmlspecialchars($ticket['id']); ?>" target="_blank" class="btn btn-success btn-sm">
+                                        <i class="fas fa-print"></i>
+                                    </a>
+                                </div>
+                                <?php endif; ?>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -247,7 +639,48 @@ $conn->close();
                 <?php endif; ?>
             </tbody>
         </table>
-    </div>
-    <script src="assets/js/script.js"></script> <!-- Ruta correcta si admin.php está en la raíz -->
+    </div>    <script src="assets/js/script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Funcionalidad para filtrar tickets
+            const btnAplicarFiltros = document.getElementById('btn-aplicar-filtros');
+            const btnLimpiarFiltros = document.getElementById('btn-limpiar-filtros');
+            const filtroEstado = document.getElementById('filtro-estado');
+            const filtroPrioridad = document.getElementById('filtro-prioridad');
+            const filasTickets = document.querySelectorAll('.fila-ticket');
+            
+            // Aplicar filtros
+            btnAplicarFiltros.addEventListener('click', function() {
+                const estadoSeleccionado = filtroEstado.value;
+                const prioridadSeleccionada = filtroPrioridad.value;
+                
+                filasTickets.forEach(function(fila) {
+                    const estadoFila = fila.getAttribute('data-estado');
+                    const prioridadFila = fila.getAttribute('data-prioridad');
+                    let mostrar = true;
+                    
+                    if (estadoSeleccionado && estadoFila !== estadoSeleccionado) {
+                        mostrar = false;
+                    }
+                    
+                    if (prioridadSeleccionada && prioridadFila !== prioridadSeleccionada) {
+                        mostrar = false;
+                    }
+                    
+                    fila.style.display = mostrar ? '' : 'none';
+                });
+            });
+            
+            // Limpiar filtros
+            btnLimpiarFiltros.addEventListener('click', function() {
+                filtroEstado.value = '';
+                filtroPrioridad.value = '';
+                
+                filasTickets.forEach(function(fila) {
+                    fila.style.display = '';
+                });
+            });
+        });
+    </script>
 </body>
 </html>

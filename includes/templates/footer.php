@@ -15,7 +15,7 @@ require_once __DIR__ . '/../config.php';
                     <p class="mb-1" style="color:var(--color5);">
                         Sistema desarrollado para la gestión y seguimiento de tickets de soporte técnico.<br>
                         <span class="fw-light">Consultas: <a href="mailto:soporte@municanchis.gob.pe" class="link-light text-decoration-underline">soporte@municanchis.gob.pe</a> | Tel: (084) 123456</span>
-                    </p>
+                    </p>+
                 </div>
                 <div class="col-md-2 d-none d-md-block">
                     <a href="#" data-bs-toggle="modal" data-bs-target="#modalTerminos" class="btn btn-outline-light btn-sm">Términos</a>

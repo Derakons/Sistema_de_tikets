@@ -608,8 +608,7 @@ $conn->close();
     <?php
     $page_title = "Seguimiento de Ticket";
     require_once 'includes/templates/header.php';
-    ?>
-    <div class="container-main">
+    ?>    <div class="container-main">
         <div class="section-header">
             <h1 class="section-title"><i class="fas fa-search-location"></i> Seguimiento de Ticket</h1>
         </div>
@@ -731,10 +730,10 @@ $conn->close();
                                     <div class="etapa-texto"><?php echo $etapa; ?></div>
                                 </div>
                             <?php endforeach; ?>
-                        </div>
-                    </div>
+                        </div>                    </div>
+                <?php endif; ?>
                 
-                    <?php if ($ticket_info['estado'] == 'Resuelto' || $ticket_info['estado'] == 'Cerrado'): ?>
+                <?php if ($ticket_info['estado'] == 'Resuelto' || $ticket_info['estado'] == 'Cerrado'): ?>
                     <div class="info-section">
                         <h3 class="info-section-title">
                             <i class="fas fa-clipboard-check"></i> Resolución del Ticket
@@ -771,7 +770,7 @@ $conn->close();
                         </div>
                         <?php endif; ?>
                     </div>
-                    <?php endif; ?>
+                <?php endif; ?>
                 
                     <div class="action-buttons">
                         <a href="javascript:window.print();" class="btn btn-primary">
@@ -784,8 +783,7 @@ $conn->close();
                         <?php endif; ?>
                         <a href="index.php" class="btn btn-outline no-print">
                             <i class="fas fa-plus-circle"></i> Crear Nuevo Ticket
-                        </a>
-                    </div>
+                        </a>                    </div>
                 </div>
             </div>
         <?php endif; ?>
