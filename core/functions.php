@@ -84,14 +84,11 @@ function logoutAdmin() {
     // Determinar la ruta de redirección basada en la ubicación del script
     if (strpos($script_path, '/admin/') !== false) {
         header("Location: login.php");
+        exit;
     } else {
         header("Location: admin/login.php");
+        exit;
     }
-    
-    exit;
-
-    header("Location: login_admin.php");
-    exit;
 }
 
 // Más funciones pueden ser agregadas aquí (ej: obtener tickets, actualizar ticket, etc.)

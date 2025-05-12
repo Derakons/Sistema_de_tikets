@@ -532,8 +532,16 @@ $conn->close();
                         <a href="<?php echo BASE_URL; ?>reports/generar_informe_v2.php?ticket_id=<?php echo htmlspecialchars($current_ticket['id']); ?>" target="_blank" class="btn btn-info">
                             <i class="fas fa-file-alt"></i> Informe Detallado
                         </a>
-                        <a href="<?php echo BASE_URL; ?>reports/imprimir_informe.php?ticket_id=<?php echo htmlspecialchars($current_ticket['id']); ?>" target="_blank" class="btn btn-success">
+                        <a href="javascript:window.print();" class="btn btn-primary">
                             <i class="fas fa-print"></i> Imprimir Directo
+                        </a>
+                        <?php if ($current_ticket['estado'] == 'Resuelto' || $current_ticket['estado'] == 'Cerrado'): ?>
+                        <a href="<?php echo BASE_URL; ?>reports/imprimir_informe.php?ticket_id=<?php echo htmlspecialchars($current_ticket['id']); ?>" target="_blank" class="btn btn-success" onclick="setTimeout(function(){window.print();}, 500);">
+                            <i class="fas fa-file-alt"></i> Ver e Imprimir Informe
+                        </a>
+                        <?php endif; ?>
+                        <a href="<?php echo BASE_URL; ?>admin/index.php" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar Edición
                         </a>
                         <?php endif; ?>
                     </div>

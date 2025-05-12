@@ -209,8 +209,8 @@ require_once '../core/templates/header.php';
                         <i class="fas fa-print"></i> Imprimir Seguimiento
                     </a>
                     <?php if ($ticket_info['estado'] == 'Resuelto' || $ticket_info['estado'] == 'Cerrado'): ?>
-                    <a href="<?php echo BASE_URL; ?>reports/imprimir_informe.php?ticket_id=<?php echo htmlspecialchars($ticket_info['id']); ?>" target="_blank" class="btn btn-success">
-                        <i class="fas fa-file-alt"></i> Ver Informe Completo
+                    <a href="<?php echo BASE_URL; ?>reports/imprimir_informe.php?ticket_id=<?php echo htmlspecialchars($ticket_info['id']); ?>" target="_blank" class="btn btn-success" onclick="setTimeout(function(){window.print();}, 500);">
+                        <i class="fas fa-file-alt"></i> Ver e Imprimir Informe
                     </a>
                     <?php endif; ?>
                     <a href="<?php echo BASE_URL; ?>public/index.php" class="btn btn-outline no-print">

@@ -39,7 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else {
             // Usuario no encontrado
             $_SESSION['login_error'] = "Usuario o contraseña incorrectos.";
-            header("Location: login_admin.php");
+            header("Location: login.php");
             exit;
         }
         $stmt->close();
