@@ -1,14 +1,7 @@
 <?php
 /**
  * generar_informe_v2.php - Versión mejorada para generar informes de tickets
- * 
- * Esta versión incluye:
- * - Visualización mejorada con diseño más profesional
- * - Más datos del ticket y mejor formateados
- * - Vista previa imprimible
- * - Opciones para compartir por WhatsApp y correo
- * - Soporte para mostrar archivos adjuntos
- * - Estadísticas del ticket (tiempo de resolución, prioridad, etc.)
+ * Permite generar informes detallados en diferentes formatos
  */
 
 $page_title = "Generar Informe - Versión 2";
@@ -36,18 +29,8 @@ if (!function_exists('formatearFecha')) {
     }
 }
 
-// Función para generar PDF - Se implementará con librería externa
+// Función para generar PDF
 function generarPDF($ticket_data, $report_content) {
-    // Esta función aprovecha la función de impresión del navegador
-    // para generar un PDF a través de la interfaz de usuario
-    
-    // Si en el futuro se desea implementar con TCPDF, podría hacerse así:
-    /*
-    Para implementar la generación de PDF con TCPDF:
-    1. Instalar TCPDF con: composer require tecnickcom/tcpdf
-    2. Incorporar el código para generar y guardar el PDF
-    */
-    
     return [
         'success' => false,
         'message' => "Por favor, use la función de imprimir del navegador para generar un PDF."
@@ -62,7 +45,8 @@ $error_message = '';
 if ($ticket_id) {
     // Query completa para obtener todos los datos relevantes del ticket
     $sql = "SELECT 
-                t.id, t.asunto, t.descripcion, t.cierre_solucion, t.estado, t.prioridad,
+                t.id, t.descripcion_breve AS asunto, t.descripcion, t.cierre_solucion, t.estado, t.prioridad,
+                t.identificacion_tipo, /* <--- Añadido este campo */
                 t.nombre_solicitante, t.dni_solicitante, t.email_solicitante, t.telefono_solicitante,
                 t.fecha_creacion, t.fecha_cierre, t.fecha_resolucion, t.ultima_actualizacion,
                 t.notas_internas, t.archivo_adjunto, t.nombre_archivo_original, t.ip_solicitante,
@@ -97,17 +81,16 @@ $numero_whatsapp_input = "";
 $report_email_content = ""; // Contenido para envío por correo (podría ser diferente al de WhatsApp)
 $report_pdf_content = ""; // Contenido para PDF (podría incluir formato especial)
 
-if ($ticket_data) {
-    // Información del solicitante
+if ($ticket_data) {    // Información del solicitante
     $nombre_solicitante = htmlspecialchars($ticket_data['nombre_solicitante'] ?? 'N/A');
     $dni_solicitante = htmlspecialchars($ticket_data['dni_solicitante'] ?? 'N/A');
     $correo_solicitante = htmlspecialchars($ticket_data['email_solicitante'] ?? 'N/A');
     $telefono_solicitante = htmlspecialchars($ticket_data['telefono_solicitante'] ?? '');
-    $ip_solicitante = htmlspecialchars($ticket_data['ip_solicitante'] ?? 'No registrada');
 
     // Información del ticket
     $id_ticket = htmlspecialchars($ticket_data['id'] ?? 'N/A');
-    $asunto_ticket = htmlspecialchars($ticket_data['asunto'] ?? 'N/A');
+    $asunto_ticket = htmlspecialchars($ticket_data['asunto'] ?? 'N/A'); // Esto es descripcion_breve del usuario
+    $tipo_averia_admin = htmlspecialchars($ticket_data['identificacion_tipo'] ?? 'No especificado'); // <-- Nueva variable
     $detalle_reportado = htmlspecialchars($ticket_data['descripcion'] ?? 'N/A'); 
     $solucion_aplicada = htmlspecialchars($ticket_data['cierre_solucion'] ?? 'N/A');
     $prioridad_ticket = htmlspecialchars($ticket_data['prioridad'] ?? 'Media');
@@ -211,39 +194,43 @@ if ($ticket_data) {
     
     // Título personalizado según el estado del ticket
     $titulo_informe = "NOTIFICACIÓN DE " . ($estado_ticket == "Resuelto" ? "RESOLUCIÓN" : "CIERRE") . " DE TICKET";
-    
-    // Construir el contenido del informe para el textarea
-    $report_content = $titulo_informe . "\n\n";
-    $report_content .= "Estimado(a) " . $nombre_solicitante . ",\n\n";
-    $report_content .= "Le informamos que su ticket N° " . $id_ticket . " ha sido " . strtolower($estado_ticket) . " en nuestro sistema.\n\n";    $report_content .= "A continuación, el detalle del servicio:\n\n";
-    $report_content .= "N° Ticket:         " . $id_ticket . "\n";
-    $report_content .= "Solicitante:       " . $nombre_solicitante . " (DNI: " . $dni_solicitante . ")\n";
-    $report_content .= "Departamento:      " . $nombre_departamento . "\n";
-    $report_content .= "Asunto:            " . $asunto_ticket . "\n";
-    $report_content .= "Prioridad:         " . $prioridad_ticket . "\n\n";    $report_content .= "DETALLE REPORTADO:\n" . $detalle_reportado . "\n\n";
-    $report_content .= "SOLUCIÓN APLICADA:\n" . $solucion_aplicada . "\n\n";
-    $report_content .= "Estado Final:      " . $estado_ticket . "\n";
-    $report_content .= "Fecha de Creación: " . $fecha_creacion_ticket . "\n";
-    $report_content .= "Fecha de Cierre:   " . $fecha_cierre_ticket . "\n";
-    $report_content .= "Tiempo Resolución: " . $tiempo_resolucion . "\n";
-    $report_content .= "Técnico Asignado:  " . $tecnico_asignado . "\n";
-    $report_content .= "Correo Registrado: " . $correo_solicitante . "\n";
-    if (!empty($telefono_solicitante)) {
-        $report_content .= "Teléfono:          " . $telefono_solicitante . "\n";
-    }    if ($tiene_adjunto) {
-        $report_content .= "Archivo Adjunto:   " . $nombre_archivo . " (Adjuntado al crear el ticket)\n";
+      // --- NUEVO FORMATO DE INFORME PROFESIONAL UNIFICADO ---
+    $usuario = $nombre_solicitante;
+    $asunto = $asunto_ticket;
+    $fecha_creacion_raw = $ticket_data['fecha_creacion'] ?? null;
+    $fecha_cierre_raw = $ticket_data['fecha_cierre'] ?? $ticket_data['fecha_resolucion'] ?? null;
+    $fecha_creacion = $fecha_creacion_raw ? formatearFecha($fecha_creacion_raw, 'd \d\e F \d\e Y \a \l\a\s H:i:s') : 'N/A';
+    $fecha_cierre = $fecha_cierre_raw ? formatearFecha($fecha_cierre_raw, 'd \d\e F \d\e Y \a \l\a\s H:i:s') : 'N/A';
+    $tiempo_resolucion = $tiempo_resolucion != 'N/A' ? $tiempo_resolucion : 'N/A';
+    $departamento = $nombre_departamento;
+    $tipo = $tipo_averia_admin;
+    $prioridad = $prioridad_ticket;
+    $estado_final = $estado_ticket;
+    $solucion = $solucion_aplicada;
+    $diagnostico = $ticket_data['diagnostico'] ?? '';
+    $fecha_actual = date('d/m/Y H:i:s');
+
+    // Determinar si es Problema o Incidente y su nivel
+    $tipo_nivel = '';
+    if (stripos($prioridad, 'grave') !== false || stripos($prioridad, 'leve') !== false) {
+        $tipo_nivel = 'Problema (' . $prioridad . ')';
+    } else if (stripos($prioridad, 'alto') !== false || stripos($prioridad, 'medio') !== false || stripos($prioridad, 'bajo') !== false) {
+        $tipo_nivel = 'Incidente (' . $prioridad . ')';
+    } else {
+        $tipo_nivel = $prioridad;
     }
+
+    $report_content = "Asunto: Notificación de Resolución: Ticket N° $id_ticket - $asunto\n";
+    $report_content .= "El presente documento informa sobre la resolución del ticket N° $id_ticket, solicitado por el usuario $usuario y gestionado por el departamento de Soporte Técnico TI.\n";
+    $report_content .= "La incidencia reportada por el usuario fue \"$asunto\", la cual fue clasificada como una avería de $tipo_nivel con una prioridad asignada de $prioridad.\n";
+    $report_content .= "Para solucionar esta situación, el equipo técnico implementó una serie de medidas:\n";
+    $report_content .= ($solucion ? $solucion . "\n" : "");
+    $report_content .= "Como resultado de estas acciones, el estado final del ticket es $estado_final.\n";
+    $report_content .= "El ticket fue generado el $fecha_creacion y fue cerrado el $fecha_cierre. El tiempo total empleado para la resolución de la incidencia fue de $tiempo_resolucion.\n";
+    $report_content .= "Se ha comunicado al usuario $usuario la resolución y el cierre formal de su solicitud mediante correo electrónico. Se le ha informado que, si tiene alguna consulta adicional sobre las medidas implementadas o cualquier otra inquietud, puede responder al mensaje recibido o contactar directamente al área de TI.\n";
+    $report_content .= "\nAtentamente,\nEl Equipo de Soporte Técnico\n(Informe generado: $fecha_actual)\n";
     
-    $report_content .= "\nAgradecemos su confianza en nuestro servicio.\n\n";
-    $report_content .= "Si tiene alguna consulta adicional, no dude en contactarnos respondiendo a este mensaje o comunicándose con el área de TI al correo: " . $email_tecnico . "\n\n";
-    $report_content .= "Atentamente,\n";
-    $report_content .= $tecnico_asignado . "\n";
-    $report_content .= "Equipo de Soporte Técnico\n";
-    // Agregar fecha y hora actual al pie del informe
-    $report_content .= "\nInforme generado: " . $fecha_actual_formateada . " " . $hora_actual_formateada . "\n";
     
-    // El reporte para email podría incluir elementos adicionales o diferentes formatos
-    $report_email_content = $report_content;
 }
 
 $conn->close();
@@ -751,10 +738,8 @@ $conn->close();
             /* Restablecer los atributos de impresión en caso de que otra regla los sobrescriba */
             * {
                 print-color-adjust: exact !important;
-                -webkit-print-color-adjust: exact !important;
-                color-adjust: exact !important;
+                -webkit-print-color-adjust: exact !important;                color-adjust: exact !important;
             }
-        }
         }
     </style>
 </head>
@@ -831,18 +816,21 @@ $conn->close();
                                 <span class="info-label">Nombre:</span>
                                 <span class="info-value"><?php echo $nombre_solicitante; ?></span>
                             </div>
-                            
+                              <?php if ($dni_solicitante != 'N/A'): ?>
                             <div class="info-field">
                                 <span class="info-label">DNI:</span>
                                 <span class="info-value"><?php echo $dni_solicitante; ?></span>
                             </div>
+                            <?php endif; ?>
                             
+                            <?php if ($correo_solicitante != 'N/A'): ?>
                             <div class="info-field">
                                 <span class="info-label">Correo:</span>
                                 <span class="info-value"><?php echo $correo_solicitante; ?></span>
                             </div>
+                            <?php endif; ?>
                             
-                            <?php if (!empty($telefono_solicitante)): ?>
+                            <?php if (!empty($telefono_solicitante) && $telefono_solicitante != 'N/A'): ?>
                             <div class="info-field">
                                 <span class="info-label">Teléfono:</span>
                                 <span class="info-value"><?php echo $telefono_solicitante; ?></span>
@@ -867,7 +855,7 @@ $conn->close();
                             </div>
                         </div>
                         <?php endif; ?>
-                        
+                          <?php if ($tecnico_asignado != 'N/A'): ?>
                         <div class="info-section tech-signature no-print">
                             <div class="info-section-title">
                                 <i class="fas fa-user-cog"></i> Técnico Asignado
@@ -879,12 +867,15 @@ $conn->close();
                                 </div>
                                 <div class="tech-details">
                                     <div class="tech-name"><?php echo $tecnico_asignado; ?></div>
+                                    <?php if ($email_tecnico != 'N/A'): ?>
                                     <div class="tech-contact">
                                         <i class="fas fa-envelope"></i> <?php echo $email_tecnico; ?>
                                     </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
+                        <?php endif; ?>
                     </div>
                     
                     <div class="report-sidebar no-print">
@@ -918,15 +909,10 @@ $conn->close();
                             <p><?php echo nl2br($notas_internas); ?></p>
                         </div>
                         <?php endif; ?>
-                        
-                        <div class="info-section">
+                          <div class="info-section">
                             <div class="info-section-title">
                                 <i class="fas fa-cog"></i> Detalles Técnicos
                             </div>
-                            
-                            <div class="info-field">
-                                <span class="info-label">IP Solicitante:</span>
-                                <span class="info-value"><?php echo $ip_solicitante; ?></span>
                             </div>
                             
                             <div class="info-field">
@@ -935,10 +921,10 @@ $conn->close();
                             </div>
                         </div>
                     </div>
-                </div>                <a href="imprimir_informe.php?ticket_id=<?php echo $id_ticket; ?>" target="_blank" class="btn btn-primary no-print" style="float: right; margin-bottom: 15px;">
-                    <i class="fas fa-print"></i> Versión para Imprimir
-                </a>
-                  <form id="form-editar-notificacion" class="formulario-notificacion" method="post" style="clear:both; margin-bottom:0;">
+                </div>                  <form id="form-editar-notificacion" class="formulario-notificacion" method="post" style="clear:both; margin-bottom:0; position: relative;">
+                    <button type="button" id="btn-imprimir-texto" class="btn btn-info no-print" style="position: absolute; right: 0; top: -50px;">
+                        <i class="fas fa-print"></i> Imprimir Texto Simple
+                    </button>
                     <textarea id="notificacion-editable" name="notificacion_editable" wrap="hard" class="texto-para-imprimir"><?php echo $report_content; ?></textarea>
                     
                     <div class="action-buttons-container no-print">
@@ -1075,38 +1061,92 @@ $conn->close();
                               '&body=' + encodeURIComponent(texto);
                 
                 window.location.href = mailtoUrl;
-            });
-        }        // Funcionalidad para generar PDF con formato limpio        var btnGenerarPDF = document.getElementById('btn-generar-pdf');
+            });        }
+        
+        // Funcionalidad para generar PDF con formato limpio
+        var btnGenerarPDF = document.getElementById('btn-generar-pdf');
         if (btnGenerarPDF) {
             btnGenerarPDF.addEventListener('click', function() {
                 // Abrir la versión de impresión en una nueva ventana
                 window.open('<?php echo BASE_URL; ?>reports/imprimir_informe.php?ticket_id=<?php echo $id_ticket; ?>&format=pdf', '_blank');
             });
         }
-          // Optimizar impresión cuando se usa el botón de imprimir
-        document.querySelector('button[onclick="window.print();"]').addEventListener('click', function(e) {
-            e.preventDefault(); // Prevenir comportamiento por defecto
+          
+        // Optimizar impresión cuando se usa el botón de imprimir texto simple        // Mejorar la funcionalidad del botón "Imprimir Texto Simple"
+        var btnImprimirTexto = document.getElementById('btn-imprimir-texto');
+        if (btnImprimirTexto) {
             
-            // Crear un documento de impresión temporal y limpio
-            var printContent = document.getElementById('notificacion-editable').value;
-            var printWin = window.open('', '_blank', 'width=800,height=600');
-            
-            printWin.document.write('<html><head><title>Informe Ticket #<?php echo $id_ticket; ?></title>');
+            // Agregar el nuevo evento click
+            btnImprimirTexto.addEventListener('click', function(e) {
+                e.preventDefault(); // Prevenir comportamiento por defecto
+                
+                // Crear un documento de impresión temporal y limpio
+                var printContent = document.getElementById('notificacion-editable').value;
+                var printWin = window.open('', '_blank', 'width=800,height=600');
+                      printWin.document.write('<html><head><title>Informe Ticket #<?php echo $id_ticket; ?></title>');
             printWin.document.write('<style>');
-            printWin.document.write('body { font-family: "Courier New", monospace; font-size: 12pt; line-height: 1.4; margin: 15mm; white-space: pre-wrap; }');
+            printWin.document.write(`
+                @media print {
+                    body { 
+                        font-family: "Courier New", monospace; 
+                        font-size: 12pt; 
+                        line-height: 1.4; 
+                        margin: 15mm; 
+                        white-space: pre-wrap;
+                    }
+                    button { display: none; }
+                    @page {
+                        size: A4;
+                        margin: 15mm;
+                    }
+                }
+                body { 
+                    font-family: "Courier New", monospace; 
+                    font-size: 12pt; 
+                    line-height: 1.4; 
+                    margin: 15mm; 
+                    white-space: pre-wrap;
+                    background-color: #f9f9f9;
+                }
+                .print-header {
+                    text-align: center;
+                    margin-bottom: 20px;
+                    font-weight: bold;
+                }
+                .print-button {
+                    padding: 8px 15px;
+                    background: #007bff;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    margin: 20px auto;
+                    display: block;
+                }
+                .close-button {
+                    padding: 8px 15px;
+                    background: #6c757d;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    margin: 10px auto;
+                    display: block;
+                }
+            `);
             printWin.document.write('</style></head><body>');
+            printWin.document.write('<div class="print-header">INFORME TICKET #<?php echo $id_ticket; ?></div>');
             printWin.document.write(printContent.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+            printWin.document.write('<button onclick="window.print();" class="print-button">Imprimir</button>');
+            printWin.document.write('<button onclick="window.close();" class="close-button">Cerrar ventana</button>');
             printWin.document.write('</body></html>');
             
             printWin.document.close();
-            
-            // Esperar a que se cargue el contenido para imprimir
+                      // Esperar a que se cargue el contenido para imprimir
             setTimeout(function() {
                 printWin.focus();
-                printWin.print();
-                printWin.close();
             }, 250);
-        });
+            });
         }
     });
     </script>    <?php require_once '../core/templates/footer.php'; ?>
