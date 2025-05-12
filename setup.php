@@ -1,11 +1,11 @@
 <?php
-require_once 'includes/config.php'; // Para la conexión $conn y session_start()
+require_once 'core/config.php'; // Para la conexión $conn y session_start()
 
 // Desactivar temporalmente errores fatales si las tablas ya existen y se intenta recrear sin IF NOT EXISTS
 // error_reporting(E_ALL ^ E_WARNING ^ E_NOTICE);
 
 $page_title = "Configuración del Sistema de Tickets";
-require_once 'includes/templates/header.php';
+require_once 'core/templates/header.php';
 
 echo "<div class='container page-container'>";
 echo "<h1><i class='fas fa-cogs'></i> Configuración Inicial del Sistema de Tickets</h1>";
@@ -133,12 +133,12 @@ if ($conn->query($sql_tickets) === TRUE) {
 echo "<hr><p><strong>Proceso de configuración completado.</strong></p>";
 echo "<p>Si es la primera vez que ejecutas esto, revisa los mensajes anteriores para confirmar que todo se creó correctamente.</p>";
 echo "<p><a href='index.php' class='btn btn-primary'><i class='fas fa-home'></i> Ir a la página principal</a> ";
-echo "<a href='login_admin.php' class='btn btn-secondary'><i class='fas fa-user-shield'></i> Ir al Login de Admin</a></p>";
+echo "<a href='admin/login.php' class='btn btn-secondary'><i class='fas fa-user-shield'></i> Ir al Login de Admin</a></p>";
 
 echo "</div>"; // Fin de .container
 
 $conn->close();
-require_once 'includes/templates/footer.php';
+require_once 'core/templates/footer.php';
 ?>
 
 <style>

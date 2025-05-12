@@ -1,8 +1,8 @@
 <?php
 $page_title = "Resumen de Notificación";
-require_once 'includes/templates/header.php';
-require_once 'includes/config.php';
-require_once 'includes/functions.php';
+require_once '../core/templates/header.php';
+require_once '../core/config.php';
+require_once '../core/functions.php';
 
 $ticket_id = isset($_GET['ticket_id']) ? limpiar_datos($_GET['ticket_id']) : null;
 $ticket_data = null;
@@ -74,10 +74,9 @@ $conn->close();
         <?php if ($ticket_data): ?>
             <h2>Resumen para Notificación por Correo</h2>
             <pre><?php echo htmlspecialchars(generar_informe_notificacion($ticket_data)); ?></pre>
-        <?php else: ?>
-            <p style="color:red; text-align:center;"><?php echo $error_message ?: "No se pudo cargar la información del ticket."; ?></p>
+        <?php else: ?>            <p style="color:red; text-align:center;"><?php echo $error_message ?: "No se pudo cargar la información del ticket."; ?></p>
         <?php endif; ?>
     </div>
-    <?php require_once 'includes/templates/footer.php'; ?>
+    <?php require_once '../core/templates/footer.php'; ?>
 </body>
 </html>

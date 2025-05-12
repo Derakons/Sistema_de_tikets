@@ -1,6 +1,6 @@
 <?php
-require_once 'includes/config.php';
-require_once 'includes/functions.php';
+require_once '../core/config.php';
+require_once '../core/functions.php';
 
 echo "<h1>Prueba de generación de IDs de ticket</h1>";
 

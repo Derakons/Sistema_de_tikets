@@ -40,26 +40,51 @@ Este sistema permite la creación, seguimiento y gestión de tickets de soporte 
 ## Estructura de Archivos
 
 ```
-Sistema_de_tikets/
-├── admin.php             # Panel de administración
-├── generar_informe.php   # Generador de informes de resolución
-├── generar_informe_v2.php # Versión mejorada del generador de informes
-├── guardar_ticket.php    # Procesamiento de nuevos tickets
-├── imprimir_informe.php  # Versión optimizada para impresión de informes
-├── index.php             # Página principal - Creación de tickets
-├── login_admin.php       # Acceso a panel de administración
-├── logout_admin.php      # Cierre de sesión
-├── pdf_generator.php     # Utilidades para generar PDF
-├── procesar_login_admin.php  # Procesamiento de credenciales
-├── seguimiento.php       # Seguimiento de tickets para usuarios
-├── setup.php             # Configuración inicial del sistema
-├── assets/               # Recursos CSS y JavaScript
-│   ├── css/              # Hojas de estilo
-│   │   ├── style.css     # Estilos principales
-│   │   └── print-styles.css # Estilos específicos para impresión
-│   └── js/               # Scripts JavaScript
-├── img/                  # Imágenes y logos
-└── includes/             # Funciones, configuración y plantillas
+/
+├── admin/               # Panel de administración
+│   ├── assets/          # (Enlace simbólico a /assets)
+│   ├── index.php        # Panel principal de administración
+│   ├── login.php        # Página de inicio de sesión
+│   ├── logout.php       # Cierre de sesión
+│   └── procesar_login.php # Procesamiento del formulario de login
+│
+├── assets/              # Recursos estáticos compartidos
+│   ├── css/
+│   │   ├── print-styles.css
+│   │   └── style.css
+│   └── js/
+│       └── script.js
+│
+├── core/               # Núcleo del sistema
+│   ├── config.php      # Configuración de la base de datos y variables globales
+│   ├── functions.php   # Funciones generales utilizadas en todo el sistema
+│   └── templates/      # Plantillas comunes
+│       ├── footer.php
+│       └── header.php
+│
+├── img/                # Imágenes generales
+│   └── logo.png
+│
+├── public/             # Interfaz pública
+│   ├── assets/         # (Enlace simbólico a /assets)
+│   ├── guardar_ticket.php  # Procesamiento para guardar un ticket
+│   ├── index.php       # Página principal para crear tickets
+│   └── seguimiento.php # Seguimiento de tickets existentes
+│
+├── reports/            # Generación de informes
+│   ├── assets/         # (Enlace simbólico a /assets)
+│   ├── generar_informe.php     # Generación de informes detallados
+│   ├── generar_informe_v2.php  # Versión mejorada de informes
+│   ├── imprimir_informe.php    # Versión para impresión
+│   ├── notificacion_resumida.php # Resumen para notificaciones
+│   └── pdf_generator.php       # Generador de PDFs
+│
+├── tests/              # Pruebas
+│   └── test_ticket_id.php   # Prueba de generación de IDs de tickets
+│
+├── uploads/            # Carpeta para archivos adjuntos
+├── index.php           # Redirecciona a public/index.php
+└── setup.php           # Script de instalación/configuración inicial
 ```
 
 ## Uso

@@ -1,8 +1,8 @@
 <?php
-require_once 'includes/config.php'; // Ajuste de ruta
-require_once 'includes/functions.php'; // Ajuste de ruta
-$page_title = "Crear Nuevo Ticket"; // Definir título específico para esta página
-require_once 'includes/templates/header.php'; 
+require_once '../core/config.php';
+require_once '../core/functions.php';
+$page_title = "Panel de Administración"; // Definir título específico para esta página
+require_once '../core/templates/header.php';
 
 
 // Proteger esta página
@@ -109,7 +109,7 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Administrador - Sistema de Tickets</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         :root {
@@ -441,8 +441,8 @@ $conn->close();
         <div class="section-header">
             <h1 class="section-title"><i class="fas fa-tachometer-alt"></i> Panel de Administración de Tickets</h1>
             <div class="action-buttons">
-                <a href="index.php" class="btn btn-primary"><i class="fas fa-home"></i> Inicio</a>
-                <!-- <a href="logout_admin.php" class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a> Descomentar cuando el login esté implementado -->
+                <a href="<?php echo BASE_URL; ?>admin/index.php" class="btn btn-primary"><i class="fas fa-home"></i> Inicio</a>
+                <a href="<?php echo BASE_URL; ?>admin/logout.php" class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
             </div>
         </div>
 
@@ -476,7 +476,7 @@ $conn->close();
                     <p><strong>Detalle del Fallo:</strong><br><pre style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 5px;"><?php echo htmlspecialchars($current_ticket['detalle_fallo']); ?></pre></p>
                 </div>
 
-                <form action="admin.php?edit_id=<?php echo htmlspecialchars($edit_ticket_id); ?>" method="POST">
+                <form action="<?php echo BASE_URL; ?>admin/index.php?edit_id=<?php echo htmlspecialchars($edit_ticket_id); ?>" method="POST">
                     <input type="hidden" name="ticket_id" value="<?php echo htmlspecialchars($current_ticket['id']); ?>">
                     
                     <div class="form-group">
@@ -528,14 +528,14 @@ $conn->close();
                         <button type="submit" name="update_ticket" class="btn btn-primary">
                             <i class="fas fa-save"></i> Actualizar Ticket
                         </button>
-                        <a href="admin.php" class="btn btn-secondary">
+                        <a href="<?php echo BASE_URL; ?>admin/index.php" class="btn btn-secondary">
                             <i class="fas fa-times"></i> Cancelar Edición
                         </a>
                         <?php if ($current_ticket['estado'] == 'Resuelto' || $current_ticket['estado'] == 'Cerrado'): ?>
-                        <a href="generar_informe_v2.php?ticket_id=<?php echo htmlspecialchars($current_ticket['id']); ?>" target="_blank" class="btn btn-info">
+                        <a href="<?php echo BASE_URL; ?>reports/generar_informe_v2.php?ticket_id=<?php echo htmlspecialchars($current_ticket['id']); ?>" target="_blank" class="btn btn-info">
                             <i class="fas fa-file-alt"></i> Informe Detallado
                         </a>
-                        <a href="imprimir_informe.php?ticket_id=<?php echo htmlspecialchars($current_ticket['id']); ?>" target="_blank" class="btn btn-success">
+                        <a href="<?php echo BASE_URL; ?>reports/imprimir_informe.php?ticket_id=<?php echo htmlspecialchars($current_ticket['id']); ?>" target="_blank" class="btn btn-success">
                             <i class="fas fa-print"></i> Imprimir Directo
                         </a>
                         <?php endif; ?>
@@ -614,16 +614,16 @@ $conn->close();
                         </td>
                         <td>
                             <div style="display: flex; gap: 5px;">
-                                <a href="admin.php?edit_id=<?php echo htmlspecialchars($ticket['id']); ?>" class="btn btn-primary btn-sm">
+                                <a href="<?php echo BASE_URL; ?>admin/index.php?edit_id=<?php echo htmlspecialchars($ticket['id']); ?>" class="btn btn-primary btn-sm">
                                     <i class="fas fa-edit"></i> Editar
                                 </a>
                                 
                                 <?php if ($ticket['estado'] == 'Resuelto' || $ticket['estado'] == 'Cerrado'): ?>
                                 <div class="dropdown-action">
-                                    <a href="generar_informe_v2.php?ticket_id=<?php echo htmlspecialchars($ticket['id']); ?>" target="_blank" class="btn btn-info btn-sm">
+                                    <a href="<?php echo BASE_URL; ?>reports/generar_informe_v2.php?ticket_id=<?php echo htmlspecialchars($ticket['id']); ?>" target="_blank" class="btn btn-info btn-sm">
                                         <i class="fas fa-file-alt"></i> Informe
                                     </a>
-                                    <a href="imprimir_informe.php?ticket_id=<?php echo htmlspecialchars($ticket['id']); ?>" target="_blank" class="btn btn-success btn-sm">
+                                    <a href="<?php echo BASE_URL; ?>reports/imprimir_informe.php?ticket_id=<?php echo htmlspecialchars($ticket['id']); ?>" target="_blank" class="btn btn-success btn-sm">
                                         <i class="fas fa-print"></i>
                                     </a>
                                 </div>

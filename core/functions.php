@@ -1,5 +1,5 @@
 <?php
-require_once 'config.php';
+require_once __DIR__ . '/config.php';
 
 // Función para limpiar los datos de entrada
 function limpiar_datos($dato) {
@@ -42,7 +42,15 @@ function isAdminLoggedIn() {
 function proteger_pagina_admin() {
     if (!isAdminLoggedIn()) {
         $_SESSION['login_error'] = "Debes iniciar sesión para acceder a esta página.";
-        header("Location: login_admin.php");
+        
+        // Determinar la ubicación del script actual
+        $script_path = $_SERVER['SCRIPT_NAME'];
+        
+        if (strpos($script_path, '/admin/') !== false) {
+            header("Location: login.php");
+        } else {
+            header("Location: admin/login.php");
+        }
         exit;
     }
 }
@@ -69,6 +77,18 @@ function logoutAdmin() {
 
     // Finalmente, destruir la sesión.
     session_destroy();
+    
+    // Redireccionar a la página de login
+    $script_path = $_SERVER['SCRIPT_NAME'];
+    
+    // Determinar la ruta de redirección basada en la ubicación del script
+    if (strpos($script_path, '/admin/') !== false) {
+        header("Location: login.php");
+    } else {
+        header("Location: admin/login.php");
+    }
+    
+    exit;
 
     header("Location: login_admin.php");
     exit;

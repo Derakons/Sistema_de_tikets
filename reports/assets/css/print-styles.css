@@ -1,0 +1,143 @@
+/* 
+ * print-styles.css - Estilos específicos para impresión
+ * Utilizado por imprimir_informe.php para la versión de impresión
+ */
+
+@page {
+    size: A4;
+    margin: 10mm;
+    marks: none;
+    /* Eliminar cabeceras y pies de página automaticos del navegador */
+    margin-header: 0;
+    margin-footer: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12pt;
+    line-height: 1.5;
+    color: #000;
+    background: #fff;
+    margin: 0;
+    padding: 10mm;
+    white-space: pre-wrap;
+}
+
+/* Contenedor principal para el informe de ticket */
+.ticket-report {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12pt;
+    line-height: 1.5;
+    padding: 10mm;
+    white-space: pre-wrap;
+    word-break: keep-all;
+}
+
+/* Pie de página eliminado */
+
+/* Instrucciones para PDF */
+.pdf-instructions {
+    background-color: #e9f5ff;
+    border: 1px solid #b8daff;
+    color: #004085;
+    padding: 10px 15px;
+    margin: 15px 0;
+    border-radius: 4px;
+    text-align: center;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+.btn-print {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+    display: inline-block;
+}
+
+.btn-print:hover {
+    background-color: #0069d9;
+}
+
+/* Estilos para impresión */
+@media print {
+    @page {
+        size: A4;
+        margin: 10mm;
+        marks: none;
+        margin-header: 0;
+        margin-footer: 0;
+        padding: 0;
+    }
+    
+    body {
+        padding: 0;
+        margin: 0;
+    }
+    
+    /* Eliminar cabeceras y pies de página automáticos */
+    head, title {
+        display: none !important;
+    }
+    
+    .no-print {
+        display: none !important;
+    }
+    
+    /* Optimizaciones para impresión */
+    .ticket-report {
+        padding: 0;
+        margin: 0;
+    }
+    
+    /* Asegurarse de que las líneas largas se manejen correctamente */
+    pre, code, .ticket-report {
+        white-space: pre-wrap !important;      /* CSS3 */
+        word-wrap: break-word !important;       /* IE */
+        word-break: normal !important;
+    }
+      /* Asegurar que todo el contenido se imprima */
+    * {
+        overflow: visible !important;
+    }
+    
+    /* Eliminar fecha, URL y numeración automática en impresiones */
+    @page {
+        margin-top: 15mm;
+        margin-bottom: 15mm;
+        margin-left: 15mm;
+        margin-right: 15mm;
+    }
+    
+    @page :first {
+        margin-top: 15mm;
+    }
+    
+    @page :left {
+        margin-left: 15mm;
+    }
+    
+    @page :right {
+        margin-right: 15mm;
+    }
+      /* Eliminar encabezados y pies de página del navegador */
+    html.print-clean {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+    
+    /* Eliminar elementos de encabezado y pie de página */
+    .page-footer,
+    .report-footer,
+    header,
+    footer {
+        display: none !important;
+        visibility: hidden !important;
+    }
+}

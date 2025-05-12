@@ -12,9 +12,9 @@
  */
 
 $page_title = "Generar Informe - Versión 2";
-require_once 'includes/templates/header.php'; 
-require_once 'includes/config.php';
-require_once 'includes/functions.php';
+require_once '../core/templates/header.php'; 
+require_once '../core/config.php';
+require_once '../core/functions.php';
 
 // Verificar si el usuario administrador está logueado
 if (function_exists('proteger_pagina_admin')) {
@@ -273,6 +273,7 @@ $conn->close();
             background-color: #f4f7f9;
             color: #333;
             margin: 0;
+            padding: 20px;
             line-height: 1.6;
         }
         
@@ -935,9 +936,10 @@ $conn->close();
                             </div>
                         </div>
                     </div>
-                </div>                <a href="imprimir_informe.php?ticket_id=<?php echo $id_ticket; ?>" target="_blank" class="btn btn-primary no-print" style="float: right; margin-bottom: 15px;">
-                    <i class="fas fa-print"></i> Versión para Imprimir
-                </a>
+                </div>
+                  <button onclick="window.print();" class="btn btn-primary no-print" style="float: right; margin-bottom: 15px;">
+                    <i class="fas fa-print"></i> Imprimir Texto Simple
+                </button>
                   <form id="form-editar-notificacion" class="formulario-notificacion" method="post" style="clear:both; margin-bottom:0;">
                     <textarea id="notificacion-editable" name="notificacion_editable" wrap="hard" class="texto-para-imprimir"><?php echo $report_content; ?></textarea>
                     
@@ -965,7 +967,7 @@ $conn->close();
                         </div>
                         
                         <div class="action-buttons-right">
-                            <button type="button" class="btn btn-outline" onclick="location.href='admin.php'">
+                            <button type="button" class="btn btn-outline" onclick="location.href='<?php echo BASE_URL; ?>admin/index.php'">
                                 <i class="fas fa-arrow-left"></i> Volver al Panel
                             </button>
                         </div>
@@ -984,7 +986,7 @@ $conn->close();
             </div>
             <div class="error-message">
                 <p><?php echo !empty($error_message) ? $error_message : "No se pudo cargar la información del ticket para el informe."; ?></p>
-                <p style="margin-top:15px;"><a href="admin.php" class="btn btn-primary">Volver al Panel</a></p>
+                <p style="margin-top:15px;"><a href="<?php echo BASE_URL; ?>admin/index.php" class="btn btn-primary">Volver al Panel</a></p>
             </div>
         <?php endif; ?>
     </div>
@@ -1080,7 +1082,7 @@ $conn->close();
         if (btnGenerarPDF) {
             btnGenerarPDF.addEventListener('click', function() {
                 // Abrir la versión de impresión en una nueva ventana
-                window.open('imprimir_informe.php?ticket_id=<?php echo $id_ticket; ?>&format=pdf', '_blank');
+                window.open('<?php echo BASE_URL; ?>reports/imprimir_informe.php?ticket_id=<?php echo $id_ticket; ?>&format=pdf', '_blank');
             });
         }
           // Optimizar impresión cuando se usa el botón de imprimir
@@ -1109,7 +1111,6 @@ $conn->close();
         });
         }
     });
-    </script>
-    <?php require_once 'includes/templates/footer.php'; ?>
+    </script>    <?php require_once '../core/templates/footer.php'; ?>
 </body>
 </html>

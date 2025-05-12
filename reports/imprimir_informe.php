@@ -6,8 +6,8 @@
  * sin elementos visuales innecesarios, optimizada para impresión en papel o PDF
  */
 
-require_once 'includes/config.php';
-require_once 'includes/functions.php';
+require_once '../core/config.php';
+require_once '../core/functions.php';
 
 // Verificar si el usuario administrador está logueado
 if (function_exists('proteger_pagina_admin')) {
@@ -290,13 +290,13 @@ $titulo_pagina = $formato_pdf ?
     </div>
 
     <div class="no-print" style="margin-top: 20px; text-align: center;">
-        <a href="generar_informe.php?ticket_id=<?php echo htmlspecialchars($ticket_id); ?>" class="back-link">Volver a la versión completa</a>
+        <a href="<?php echo BASE_URL; ?>reports/generar_informe.php?ticket_id=<?php echo htmlspecialchars($ticket_id); ?>" class="back-link">Volver a la versión completa</a>
     </div>
 <?php else: ?>
     <div class="error-message">
         <?php echo !empty($error_message) ? htmlspecialchars($error_message) : "No se pudo cargar la información del ticket para el informe."; ?>
     </div>
-    <a href="generar_informe.php" class="back-link no-print">Volver a la generación de informes</a>
+    <a href="<?php echo BASE_URL; ?>reports/generar_informe.php" class="back-link no-print">Volver a la generación de informes</a>
 <?php endif; ?>
 
 <script>

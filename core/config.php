@@ -120,13 +120,30 @@ if ($count_admin == 0) {
 $conn->query("SET NAMES 'utf8mb4'"); // Establecer el charset a utf8mb4 para soportar caracteres especiales y emojis
 $conn->set_charset("utf8mb4");
 
-// Configuración general del sitio
-$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https://" : "http://";
+// Configuración general del sitio: determinar BASE_URL
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
 $host = $_SERVER['HTTP_HOST'];
-$site_url_base = rtrim(dirname(dirname($_SERVER['PHP_SELF'])), '/\\') . '/'; // Asume que config.php está en 'includes'
-define('SITE_URL', "{$protocol}{$host}{$site_url_base}"); // Cambia esto a la URL de tu proyecto
-const SITE_TITLE = 'Sistema de Tickets - Municipalidad de Canchis';
 
-// Configuración de zona horaria
-date_default_timezone_set('America/Lima'); // Ajusta a tu zona horaria
+// Obtener la ruta base del proyecto relativa a la web
+$script_name = str_replace('\\', '/', $_SERVER['SCRIPT_NAME']);
+$project_folder = '/Sistema de tikets/'; // Cambia esto si tu carpeta tiene otro nombre
+if (strpos($script_name, $project_folder) !== false) {
+    $base_uri_final = substr($script_name, 0, strpos($script_name, $project_folder) + strlen($project_folder));
+} else {
+    // Fallback: solo la raíz
+    $base_uri_final = '/';
+}
+
+if (!defined('BASE_URL')) {
+    define('BASE_URL', $protocol . $host . $base_uri_final);
+}
+
+if (!defined('SITE_URL')) {
+    define('SITE_URL', BASE_URL); 
+}
+
+if (!defined('SITE_TITLE')) {
+    define('SITE_TITLE', 'Sistema de Tickets - Municipalidad de Canchis');
+}
+
 ?>

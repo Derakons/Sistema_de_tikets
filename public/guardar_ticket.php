@@ -1,8 +1,8 @@
 <?php
 $page_title = "Guardar Ticket";
-require_once 'includes/templates/header.php';
-require_once 'includes/config.php';
-require_once 'includes/functions.php';
+require_once '../core/templates/header.php';
+require_once '../core/config.php';
+require_once '../core/functions.php';
 
 $detalle_fallo = '';
 $descripcion_breve = '';
@@ -72,6 +72,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <p><a href="index.php" class="btn">Crear Otro Ticket</a></p>
         <p><a href="seguimiento.php<?php echo $ticket_id_generado ? '?numero_ticket=' . htmlspecialchars($ticket_id_generado) : ''; ?>" class="btn">Hacer Seguimiento de este Ticket</a></p>
     </div>
-    <?php require_once 'includes/templates/footer.php'; ?>
+    <?php require_once '../core/templates/footer.php'; ?>
 </body>
 </html>

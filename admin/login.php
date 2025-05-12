@@ -1,10 +1,10 @@
 <?php
-require_once 'includes/config.php';
-require_once 'includes/functions.php';
+require_once '../core/config.php';
+require_once '../core/functions.php';
 
 // Si el admin ya está logueado, redirigir a admin.php
 if (isAdminLoggedIn()) {
-    header("Location: admin.php");
+    header("Location: " . BASE_URL . "admin/index.php");
     exit;
 }
 
@@ -16,7 +16,7 @@ if (isset($_SESSION['login_error'])) {
     unset($_SESSION['login_error']); // Limpiar el mensaje de error después de mostrarlo
 }
 
-require_once 'includes/templates/header.php';
+require_once '../core/templates/header.php';
 ?>
 
 <div class="container login-container">
@@ -26,7 +26,7 @@ require_once 'includes/templates/header.php';
         <p style="color: red; text-align: center;"><?php echo htmlspecialchars($error_message); ?></p>
     <?php endif; ?>
 
-    <form action="procesar_login_admin.php" method="POST">
+    <form action="procesar_login.php" method="POST">
         <div class="form-group">
             <label for="username">Usuario:</label>
             <input type="text" id="username" name="username" required autofocus>
@@ -34,9 +34,8 @@ require_once 'includes/templates/header.php';
         <div class="form-group">
             <label for="password">Contraseña:</label>
             <input type="password" id="password" name="password" required>
-        </div>
-        <button type="submit" class="btn btn-primary" style="width: 100%;">Ingresar</button>
+        </div>        <button type="submit" class="btn btn-primary" style="width: 100%;">Ingresar</button>
     </form>
 </div>
 
-<?php require_once 'includes/templates/footer.php'; ?>
+<?php require_once '../core/templates/footer.php'; ?>

@@ -2,37 +2,28 @@
 if (session_status() == PHP_SESSION_NONE) {
     session_start(); // Asegurarse de que la sesión esté iniciada
 }
-require_once __DIR__ . '/../config.php'; // Ajustar ruta para config.php
+require_once __DIR__ . '/../config.php'; // Se espera que BASE_URL y SITE_TITLE se definan aquí.
 require_once __DIR__ . '/../functions.php'; // Ajustar ruta para functions.php
 
-// Determinar la ruta base correcta para los assets y enlaces
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-$host = $_SERVER['HTTP_HOST'];
-$script_name = $_SERVER['SCRIPT_NAME'];
+// La definición de BASE_URL debe estar en core/config.php para una gestión centralizada.
+// Ejemplo para core/config.php: define('BASE_URL', 'http://localhost/Sistema%20de%20tikets/');
+// Ejemplo para core/config.php: define('SITE_TITLE', 'Sistema de Tickets de Soporte TI');
 
-// Asumimos que la carpeta del proyecto es "Sistema de tikets"
-// Si está en la raíz de htdocs, $project_folder sería ''
-// Si está en una subcarpeta, por ejemplo /proyectos/Sistema de tikets, $project_folder sería '/proyectos'
-$project_base_path = ''; 
-if (strpos($script_name, '/Sistema%20de%20tikets/') !== false) {
-    $project_base_path = substr($script_name, 0, strpos($script_name, '/Sistema%20de%20tikets/') + strlen('/Sistema%20de%20tikets/'));
-} elseif (strpos($script_name, '/Sistema de tikets/') !== false) { // En caso de que el espacio no esté codificado
-     $project_base_path = substr($script_name, 0, strpos($script_name, '/Sistema de tikets/') + strlen('/Sistema de tikets/'));
-} else {
-    // Intento de detección si está en una subcarpeta directa de htdocs
-    $path_parts = explode('/', dirname($script_name));
-    if (count($path_parts) > 1 && $path_parts[1] === 'Sistema de tikets') {
-        $project_base_path = '/' . $path_parts[1] . '/';
-    } else {
-         // Si no se puede determinar, se asume que está en la raíz del servidor o se necesita configuración manual.
-         // Para XAMPP, si "Sistema de tikets" es la carpeta raíz del proyecto en htdocs:
-        $project_base_path = '/Sistema%20de%20tikets/'; // Ajustar si es necesario
-    }
+// Comprobación de emergencia: si BASE_URL no está definida, se registra un error y se usa un fallback.
+if (!defined('BASE_URL')) {
+    error_log('Error Crítico: BASE_URL no está definida en core/config.php. Los enlaces del sitio podrían no funcionar. Usando fallback de emergencia.');
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+    $host = $_SERVER['HTTP_HOST'];
+    // Esta es una suposición para un entorno XAMPP y DEBE ser configurada correctamente en core/config.php
+    // rawurlencode es importante si el nombre de la carpeta del proyecto tiene espacios.
+    define('BASE_URL', $protocol . $host . '/' . rawurlencode('Sistema de tikets') . '/'); 
 }
-// Limpiar múltiples barras //
-$project_base_path = rtrim(str_replace('//', '/', $project_base_path), '/') . '/';
 
-define('BASE_URL', $protocol . $host . $project_base_path);
+// Comprobación similar para SITE_TITLE.
+if (!defined('SITE_TITLE')) {
+    error_log('Advertencia: SITE_TITLE no está definida en core/config.php. Usando fallback.');
+    define('SITE_TITLE', 'Sistema de Tickets de Soporte TI'); // Fallback básico para SITE_TITLE
+}
 
 ?>
 <!DOCTYPE html>
@@ -40,7 +31,7 @@ define('BASE_URL', $protocol . $host . $project_base_path);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($page_title) ? htmlspecialchars($page_title) : SITE_TITLE; ?></title>
+    <title><?php echo isset($page_title) ? htmlspecialchars($page_title) : htmlspecialchars(SITE_TITLE); ?></title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
@@ -77,22 +68,24 @@ define('BASE_URL', $protocol . $host . $project_base_path);
             color: #fff !important;
             margin-left: 10px;
             border-radius: 6px;
-            padding: 6px 16px;
+            padding: 0.5rem 1rem; /* Ajustado para consistencia */
             transition: background 0.2s;
         }
         .navbar .logout-link:hover {
             background: #3d1816;
+            color: #fff !important; /* Asegurar color de texto en hover */
         }
         .navbar .admin-link {
             background: var(--color4);
             color: #fff !important;
             margin-left: 10px;
             border-radius: 6px;
-            padding: 6px 16px;
+            padding: 0.5rem 1rem; /* Ajustado para consistencia */
             transition: background 0.2s;
         }
         .navbar .admin-link:hover {
             background: #417177;
+            color: #fff !important; /* Asegurar color de texto en hover */
         }
         .navbar-logo {
             height: 48px;
@@ -111,7 +104,7 @@ define('BASE_URL', $protocol . $host . $project_base_path);
         .site-subtitle {
             font-family: 'Roboto', sans-serif;
             font-size: 1em;
-            color: #f8d7da;
+            color: #f8d7da; /* Considerar hacerlo más genérico o parte de las variables CSS si es necesario */
             margin-top: -2px;
         }
         @media (max-width: 600px) {
@@ -127,7 +120,7 @@ define('BASE_URL', $protocol . $host . $project_base_path);
                 <img src="<?php echo BASE_URL; ?>img/logo.png" alt="Logo Municipalidad de Canchis" class="navbar-logo">
                 <div class="ms-2">
                     <span class="site-title">Municipalidad Provincial de Canchis</span><br>
-                    <span class="site-subtitle">Sistema de Tickets de Soporte TI</span>
+                    <span class="site-subtitle"><?php echo htmlspecialchars(SITE_TITLE); ?></span>
                 </div>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -139,18 +132,18 @@ define('BASE_URL', $protocol . $host . $project_base_path);
                         <a class="nav-link" href="<?php echo BASE_URL; ?>index.php">Crear Ticket</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo BASE_URL; ?>seguimiento.php">Seguimiento</a>
+                        <a class="nav-link" href="<?php echo BASE_URL; ?>public/seguimiento.php">Seguimiento</a>
                     </li>
                     <?php if (isAdminLoggedIn()): ?>
                         <li class="nav-item">
-                            <a class="nav-link admin-link" href="<?php echo BASE_URL; ?>admin.php">Panel Admin</a>
+                            <a class="nav-link admin-link" href="<?php echo BASE_URL; ?>admin/index.php">Panel Admin</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link logout-link" href="<?php echo BASE_URL; ?>logout_admin.php">Cerrar Sesión</a>
+                            <a class="nav-link logout-link" href="<?php echo BASE_URL; ?>admin/logout.php">Cerrar Sesión</a>
                         </li>
                     <?php else: ?>
                         <li class="nav-item">
-                            <a class="nav-link admin-link" href="<?php echo BASE_URL; ?>login_admin.php">Admin Login</a>
+                            <a class="nav-link admin-link" href="<?php echo BASE_URL; ?>admin/login.php">Admin Login</a>
                         </li>
                     <?php endif; ?>
                 </ul>

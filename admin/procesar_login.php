@@ -1,6 +1,6 @@
 <?php
-require_once 'includes/config.php';
-require_once 'includes/functions.php';
+require_once '../core/config.php';
+require_once '../core/functions.php';
 
 // No incluir header.php aquí, ya que este archivo solo procesa lógica y redirecciones
 
@@ -28,14 +28,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION['admin_nombre_completo'] = $admin['nombre_completo'];
                 
                 // Regenerar ID de sesión por seguridad
-                session_regenerate_id(true);
-
-                header("Location: admin.php"); // Redirigir al panel de administración
+                session_regenerate_id(true);                header("Location: index.php"); // Redirigir al panel de administración
                 exit;
             } else {
                 // Contraseña incorrecta
                 $_SESSION['login_error'] = "Usuario o contraseña incorrectos.";
-                header("Location: login_admin.php");
+                header("Location: login.php");
                 exit;
             }
         } else {
@@ -48,11 +46,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         // Error en la preparación de la consulta
         $_SESSION['login_error'] = "Error en la base de datos.";
-        header("Location: login_admin.php");
+        header("Location: login.php");
         exit;
     }
 } else {
-    header("Location: login_admin.php");
+    header("Location: login.php");
     exit;
 }
 
