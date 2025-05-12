@@ -88,7 +88,7 @@ if (isset($_GET['edit_id'])) {
 }
 
 // Obtener todos los tickets para el listado
-$sql_all_tickets = "SELECT t.id, t.fecha_creacion, d.nombre_departamento, t.asunto, t.estado, t.prioridad 
+$sql_all_tickets = "SELECT t.id, t.fecha_creacion, d.nombre_departamento, t.descripcion_breve AS asunto, t.estado, t.prioridad 
                     FROM tickets t 
                     LEFT JOIN departamentos d ON t.id_departamento = d.id 
                     ORDER BY t.fecha_creacion DESC";
@@ -467,24 +467,21 @@ $conn->close();
                 </div>
                 
                 <div class="info-original">
-                    <h4><i class="fas fa-info-circle"></i> Información Original del Usuario:</h4>
-                    <p><strong>Fecha Creación:</strong> <?php echo htmlspecialchars(date("d/m/Y H:i", strtotime($current_ticket['fecha_creacion']))); ?></p>
-                    <p><strong>Departamento:</strong> <?php echo htmlspecialchars($current_ticket['nombre_departamento']); ?></p>
-                    <p><strong>Solicitante:</strong> <?php echo htmlspecialchars($current_ticket['nombre_solicitante'] ?: 'N/A'); ?></p>
-                    <p><strong>Contacto:</strong> <?php echo htmlspecialchars($current_ticket['contacto_solicitante'] ?: 'N/A'); ?></p>
-                    <p><strong>Breve Descripción:</strong> <?php echo htmlspecialchars($current_ticket['descripcion_breve']); ?></p>
-                    <p><strong>Detalle del Fallo:</strong><br><pre style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 5px;"><?php echo htmlspecialchars($current_ticket['detalle_fallo']); ?></pre></p>
+                    <h4>Información Original del Ticket</h4>
+                    <p><strong>Asunto Original (si aplica):</strong> <?php echo htmlspecialchars($current_ticket['descripcion_breve'] ?? 'No especificado'); ?></p>
+                    <p><strong>Descripción Original:</strong> <?php echo nl2br(htmlspecialchars($current_ticket['detalle_fallo'] ?? $current_ticket['descripcion'] ?? 'No especificado')); ?></p>
                 </div>
 
                 <form action="<?php echo BASE_URL; ?>admin/index.php?edit_id=<?php echo htmlspecialchars($edit_ticket_id); ?>" method="POST">
                     <input type="hidden" name="ticket_id" value="<?php echo htmlspecialchars($current_ticket['id']); ?>">
                     
                     <div class="form-group">
-                        <label for="identificacion_tipo">Identificación:</label>
-                        <select id="identificacion_tipo" name="identificacion_tipo">
-                            <option value="">Seleccione...</option>
-                            <option value="Problema" <?php echo ($current_ticket['identificacion_tipo'] == 'Problema') ? 'selected' : ''; ?>>Problema</option>
-                            <option value="Incidente" <?php echo ($current_ticket['identificacion_tipo'] == 'Incidente') ? 'selected' : ''; ?>>Incidente</option>
+                        <label for="identificacion_tipo">Tipo de Avería (Admin):</label>
+                        <select id="identificacion_tipo" name="identificacion_tipo" required>
+                            <option value="" <?php echo empty($current_ticket['identificacion_tipo']) ? 'selected' : ''; ?>>Seleccione un tipo</option>
+                            <option value="Software" <?php echo (($current_ticket['identificacion_tipo'] ?? '') == 'Software') ? 'selected' : ''; ?>>Software</option>
+                            <option value="Hardware" <?php echo (($current_ticket['identificacion_tipo'] ?? '') == 'Hardware') ? 'selected' : ''; ?>>Hardware</option>
+                            <option value="Otro" <?php echo (($current_ticket['identificacion_tipo'] ?? '') == 'Otro') ? 'selected' : ''; ?>>Otro (Especificar en diagnóstico)</option>
                         </select>
                     </div>
 

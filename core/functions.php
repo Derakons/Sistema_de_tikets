@@ -115,32 +115,34 @@ function obtener_departamentos($conn) {
 
 // Función para generar el cuerpo de un informe tipo notificación para correo
 function generar_informe_notificacion($ticket_data) {
-    $fecha_actual = date('Y-m-d');
-    $fecha_cierre = $ticket_data['fecha_cierre'] ? date('Y-m-d', strtotime($ticket_data['fecha_cierre'])) : 'N/A';
-    $correo = $ticket_data['email_solicitante'] ?? 'N/A';
-    $id_ticket = $ticket_data['id'] ?? 'N/A';
-    $nombre = $ticket_data['nombre_solicitante'] ?? 'Usuario';
+    $asunto = "Notificación de Resolución: Ticket N° " . $ticket_data['id'] . " - " . ($ticket_data['descripcion_breve'] ?? 'Sin asunto');
+    $usuario = $ticket_data['usuario'] ?? 'N/A';
     $departamento = $ticket_data['nombre_departamento'] ?? 'N/A';
-    $asunto = $ticket_data['descripcion_breve'] ?? ($ticket_data['asunto'] ?? '');
-    $detalle = $ticket_data['detalle_fallo'] ?? '';
-    $solucion = $ticket_data['cierre_solucion'] ?? '';
-    $estado = $ticket_data['estado'] ?? '';
-    $fecha_creacion = $ticket_data['fecha_creacion'] ? date('Y-m-d', strtotime($ticket_data['fecha_creacion'])) : 'N/A';
-    return "*Notificación de cierre de ticket en el Sistema de Tickets de la Municipalidad Provincial de Canchis*\n\n"
-    . "Hola. Este es un mensaje del Sistema de Tickets de Soporte TI.\n\n"
-    . "Según la política institucional, su ticket *$id_ticket* ha sido cerrado el *$fecha_cierre*.\n"
-    . "A continuación, el resumen de su caso:\n\n"
-    . "*Departamento:* $departamento\n"
-    . "*Asunto:* $asunto\n"
-    . "*Detalle reportado:* $detalle\n"
-    . "*Solución aplicada:* $solucion\n"
-    . "*Estado final:* $estado\n"
-    . "*Fecha de creación:* $fecha_creacion\n"
-    . "*Fecha de cierre:* $fecha_cierre\n\n"
-    . "Si tiene alguna pregunta sobre este ticket, puede responder a este correo o comunicarse con el área de TI de la Municipalidad.\n\n"
-    . "Una vez más, gracias por usar el Sistema de Tickets de la Municipalidad Provincial de Canchis.\n\n"
-    . "📧 Correo registrado: *$correo*\n"
-    . "📅 Este mensaje se generó el *$fecha_actual*\n";
+    $fecha_creacion = date('d/m/Y H:i:s', strtotime($ticket_data['fecha_creacion']));
+    $fecha_cierre = $ticket_data['fecha_cierre'] ? date('d/m/Y H:i:s', strtotime($ticket_data['fecha_cierre'])) : 'N/A';
+    $tiempo_resolucion = '';
+    if ($ticket_data['fecha_cierre'] && $ticket_data['fecha_creacion']) {
+        $inicio = strtotime($ticket_data['fecha_creacion']);
+        $fin = strtotime($ticket_data['fecha_cierre']);
+        $minutos = round(($fin - $inicio) / 60);
+        $tiempo_resolucion = $minutos . ' minutos';
+    }
+    $diagnostico = $ticket_data['diagnostico'] ?? '';
+    $cierre = $ticket_data['cierre_solucion'] ?? '';
+    $prioridad = $ticket_data['prioridad'] ?? 'N/A';
+    $tipo = $ticket_data['identificacion_tipo'] ?? 'N/A';
+    $estado = $ticket_data['estado'] ?? 'N/A';
+    $fecha_actual = date('d/m/Y H:i:s');
+    $res = "Asunto: $asunto\n";
+    $res .= "El presente documento informa sobre la resolución del ticket N° {$ticket_data['id']}, solicitado por el usuario $usuario y gestionado por el departamento de $departamento.\n";
+    $res .= "La incidencia reportada por el usuario fue \"{$ticket_data['descripcion_breve']}\", la cual fue clasificada como una avería de $tipo con una prioridad asignada de $prioridad.\n";
+    $res .= "Para solucionar esta situación, el equipo técnico implementó una serie de medidas:\n";
+    $res .= ($cierre ? $cierre . "\n" : "");
+    $res .= "Como resultado de estas acciones, el estado final del ticket es $estado.\n";
+    $res .= "El ticket fue generado el $fecha_creacion y fue cerrado el $fecha_cierre. El tiempo total empleado para la resolución de la incidencia fue de $tiempo_resolucion.\n";
+    $res .= "Se ha comunicado al usuario $usuario la resolución y el cierre formal de su solicitud mediante correo electrónico. Se le ha informado que, si tiene alguna consulta adicional sobre las medidas implementadas o cualquier otra inquietud, puede responder al mensaje recibido o contactar directamente al área de TI.\n";
+    $res .= "Atentamente,\nEl Equipo de Soporte Técnico\n(Informe generado: $fecha_actual)\n";
+    return $res;
 }
 
 ?>
