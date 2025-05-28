@@ -134,8 +134,10 @@ if (!defined('SITE_TITLE')) {
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="<?php echo BASE_URL; ?>public/seguimiento.php">Seguimiento</a>
-                    </li>
-                    <?php if (isAdminLoggedIn()): ?>
+                    </li>                    <?php if (isAdminLoggedIn()): ?>
+                        <li class="nav-item">
+                            <a class="nav-link admin-link" href="<?php echo BASE_URL; ?>admin/dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link admin-link" href="<?php echo BASE_URL; ?>admin/index.php">Panel Admin</a>
                         </li>

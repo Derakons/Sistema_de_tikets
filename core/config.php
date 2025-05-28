@@ -10,140 +10,67 @@ define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_NAME', 'municipalidad_canchis_tickets');
 
+// Configuración de la aplicación
+// Asumiendo que config.php está en /core/, RUTA_APP es un nivel arriba.
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+$host = $_SERVER['HTTP_HOST'];
+$script_dir = str_replace('\\' , '/', dirname($_SERVER['SCRIPT_NAME'])); // Directorio del script actual
+// Si SCRIPT_NAME es /Sistema de tikets/core/algoscript.php, dirname es /Sistema de tikets/core
+// Necesitamos /Sistema de tikets/
+$app_path = dirname($script_dir);
+if ($app_path === '/' || $app_path === '\\') {
+    $app_path = ''; // Evitar doble barra si está en la raíz del host
+}
+// Asegurarse de que RUTA_APP_URL termine con una barra, incluso si $app_path está vacío (raíz del host)
+$base_url = $protocol . $host . ($app_path ? $app_path . '/' : '/');
+define('RUTA_APP_URL', $base_url);
+
+
 // Conexión al servidor MySQL (sin seleccionar base de datos)
 $conn = @new mysqli(DB_HOST, DB_USER, DB_PASS);
 if ($conn->connect_error) {
-    die("Conexión fallida: " . $conn->connect_error);
+    // Si la conexión al servidor falla, no podemos hacer mucho más.
+    die("Conexión fallida con el servidor de base de datos: " . $conn->connect_error);
 }
 
-// Crear la base de datos si no existe
-$conn->query("CREATE DATABASE IF NOT EXISTS `" . DB_NAME . "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-$conn->select_db(DB_NAME);
+// Verificar si la base de datos existe
+$db_exists_result = $conn->query("SHOW DATABASES LIKE '" . DB_NAME . "'");
 
-// --- CREAR TABLAS Y CAMPOS NECESARIOS PARA FUNCIONAMIENTO CORRECTO DEL SISTEMA ---
-// 1. Tabla departamentos
-$conn->query("CREATE TABLE IF NOT EXISTS departamentos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre_departamento VARCHAR(150) NOT NULL UNIQUE,
-    descripcion TEXT NULL,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
-
-// 2. Tabla usuarios_admin
-$conn->query("CREATE TABLE IF NOT EXISTS usuarios_admin (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre_usuario VARCHAR(50) NOT NULL UNIQUE,
-    contrasena_hash VARCHAR(255) NOT NULL,
-    nombre_completo VARCHAR(100),
-    email VARCHAR(100) UNIQUE,
-    rol VARCHAR(50) DEFAULT 'administrador',
-    activo BOOLEAN DEFAULT TRUE,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ultimo_acceso TIMESTAMP NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
-
-// 3. Tabla tickets (estructura alineada a las funciones y formularios)
-$conn->query("CREATE TABLE IF NOT EXISTS tickets (
-    id VARCHAR(30) PRIMARY KEY,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    detalle_fallo TEXT NULL,
-    descripcion_breve VARCHAR(255) NULL,
-    id_departamento INT NOT NULL,
-    nombre_solicitante VARCHAR(150) NULL,
-    contacto_solicitante VARCHAR(100) NULL,
-    estado VARCHAR(50) NOT NULL DEFAULT 'Abierto',
-    prioridad VARCHAR(50) DEFAULT 'Media',
-    identificacion_tipo VARCHAR(50) NULL,
-    diagnostico TEXT NULL,
-    cierre_solucion TEXT NULL,
-    fecha_actualizacion_admin DATETIME NULL,
-    fecha_cierre TIMESTAMP NULL,
-    -- Campos opcionales para compatibilidad con versiones anteriores
-    dni_solicitante VARCHAR(15) NULL,
-    telefono_solicitante VARCHAR(20) NULL,
-    email_solicitante VARCHAR(100) NULL,
-    asunto VARCHAR(255) NULL,
-    descripcion TEXT NULL,
-    archivo_adjunto VARCHAR(255) NULL,
-    nombre_archivo_original VARCHAR(255) NULL,
-    ultima_actualizacion TIMESTAMP NULL,
-    id_admin_asignado INT NULL,
-    ip_solicitante VARCHAR(45) NULL,
-    notas_internas TEXT NULL,
-    fecha_resolucion TIMESTAMP NULL,
-    FOREIGN KEY (id_departamento) REFERENCES departamentos(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    FOREIGN KEY (id_admin_asignado) REFERENCES usuarios_admin(id) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
-
-// --- LIMPIEZA DE COLUMNAS DUPLICADAS O INNECESARIAS ---
-// Eliminar columna departamento_id si existe (solo debe existir id_departamento)
-$conn->query("ALTER TABLE tickets DROP COLUMN IF EXISTS departamento_id");
-
-// --- INSERCIÓN DE DATOS INICIALES SI ES NECESARIO ---
-// Insertar departamentos iniciales si la tabla está vacía
-$check_dept = $conn->query("SELECT COUNT(*) as count FROM departamentos");
-$count_dept = $check_dept ? $check_dept->fetch_assoc()['count'] : 0;
-if ($count_dept == 0) {
-    $departamentos_iniciales = [
-        ['Mesa de Partes', 'Recepción y derivación de documentos.'],
-        ['Soporte Técnico TI', 'Asistencia con problemas de hardware y software.'],
-        ['Rentas', 'Consultas sobre tributos y pagos municipales.'],
-        ['Desarrollo Urbano y Rural', 'Trámites de licencias de construcción, catastro, etc.'],
-        ['Servicios Públicos', 'Gestión de limpieza, parques y jardines, alumbrado.'],
-        ['Alcaldía', 'Asuntos directos con la alcaldía.'],
-        ['Secretaría General', 'Gestión documentaria y administrativa general.']
-    ];
-    $stmt_dept = $conn->prepare("INSERT INTO departamentos (nombre_departamento, descripcion) VALUES (?, ?)");
-    foreach ($departamentos_iniciales as $dept) {
-        $stmt_dept->bind_param("ss", $dept[0], $dept[1]);
-        $stmt_dept->execute();
+if ($db_exists_result && $db_exists_result->num_rows == 0) {
+    // La base de datos no existe
+    if (basename($_SERVER['PHP_SELF']) != 'setup.php') {
+        // No estamos en setup.php, así que redirigimos a setup.php
+        // La redirección debe ser a la URL base + setup.php
+        header('Location: ' . RUTA_APP_URL . 'setup.php?error=db_not_found');
+        exit;
     }
-    $stmt_dept->close();
-}
-
-// Insertar usuario administrador por defecto si no existe
-$admin_user = 'admin';
-$admin_pass_plain = 'admin123';
-$admin_pass_hash = password_hash($admin_pass_plain, PASSWORD_DEFAULT);
-$admin_nombre = 'Administrador Principal';
-$admin_email = 'admin@example.com';
-$check_admin = $conn->query("SELECT COUNT(*) as count FROM usuarios_admin WHERE nombre_usuario = 'admin'");
-$count_admin = $check_admin ? $check_admin->fetch_assoc()['count'] : 0;
-if ($count_admin == 0) {
-    $stmt_admin = $conn->prepare("INSERT INTO usuarios_admin (nombre_usuario, contrasena_hash, nombre_completo, email) VALUES (?, ?, ?, ?)");
-    $stmt_admin->bind_param("ssss", $admin_user, $admin_pass_hash, $admin_nombre, $admin_email);
-    $stmt_admin->execute();
-    $stmt_admin->close();
-}
-
-// Verificar si la conexión fue exitosa
-$conn->query("SET NAMES 'utf8mb4'"); // Establecer el charset a utf8mb4 para soportar caracteres especiales y emojis
-$conn->set_charset("utf8mb4");
-
-// Configuración general del sitio: determinar BASE_URL
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-$host = $_SERVER['HTTP_HOST'];
-
-// Obtener la ruta base del proyecto relativa a la web
-$script_name = str_replace('\\', '/', $_SERVER['SCRIPT_NAME']);
-$project_folder = '/Sistema de tikets/'; // Cambia esto si tu carpeta tiene otro nombre
-if (strpos($script_name, $project_folder) !== false) {
-    $base_uri_final = substr($script_name, 0, strpos($script_name, $project_folder) + strlen($project_folder));
+    // Si estamos en setup.php, ese script se encargará de crear la BD.
+    // No intentamos seleccionar la BD aquí porque fallaría y setup.php lo hará después de crearla.
+} else if ($db_exists_result) {
+    // La base de datos existe o podría existir (si $db_exists_result es false, hubo un error en SHOW DATABASES)
+    // Intentar seleccionar la base de datos
+    if (!$conn->select_db(DB_NAME)) {
+        // Si la selección falla (ej. por permisos, aunque la BD exista)
+        if (basename($_SERVER['PHP_SELF']) != 'setup.php') {
+            die("Error seleccionando la base de datos '" . DB_NAME . "': " . $conn->error . ". Por favor, ejecute setup.php o verifique los permisos.");
+        }
+        // Si estamos en setup.php, se intentará crear/seleccionar de nuevo.
+    } else {
+        // Base de datos seleccionada correctamente, establecer charset.
+        if (!$conn->set_charset("utf8mb4")) {
+            // Opcional: registrar este error o mostrar un aviso
+            // printf("Error cargando el conjunto de caracteres utf8mb4: %s\n", $conn->error);
+        }
+    }
 } else {
-    // Fallback: solo la raíz
-    $base_uri_final = '/';
+    // Error al ejecutar SHOW DATABASES (poco probable si la conexión al servidor fue exitosa)
+     if (basename($_SERVER['PHP_SELF']) != 'setup.php') {
+        die("Error al verificar la existencia de la base de datos: " . $conn->error);
+    }
 }
 
-if (!defined('BASE_URL')) {
-    define('BASE_URL', $protocol . $host . $base_uri_final);
-}
-
-if (!defined('SITE_URL')) {
-    define('SITE_URL', BASE_URL); 
-}
-
-if (!defined('SITE_TITLE')) {
-    define('SITE_TITLE', 'Sistema de Tickets - Municipalidad de Canchis');
-}
+// Incluir funciones globales
+// __DIR__ es el directorio del archivo actual (core), así que functions.php está en el mismo directorio.
+require_once __DIR__ . '/functions.php';
 
 ?>

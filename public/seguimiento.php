@@ -94,16 +94,16 @@ require_once '../core/templates/header.php';
                     </div>
                     <div class="info-row modern-info-row">
                         <div class="info-label modern-info-label">Asunto Original:</div>
-                        <div class="info-value modern-info-value"><?php echo htmlspecialchars($ticket_info['descripcion_breve']); ?></div>
+                        <div class="info-value modern-info-value"><?php echo htmlspecialchars($ticket_info['asunto']); ?></div>
                     </div>
                     <div class="info-row modern-info-row">
                         <div class="info-label modern-info-label">Descripción Original:</div>
-                        <div class="info-value modern-info-value"><?php echo htmlspecialchars($ticket_info['detalle_fallo']); ?></div>
+                        <div class="info-value modern-info-value"><?php echo htmlspecialchars($ticket_info['descripcion']); ?></div>
                     </div>
-                    <?php if ($ticket_info['fecha_actualizacion_admin']): ?>
+                    <?php if ($ticket_info['ultima_actualizacion']): ?>
                     <div class="info-row modern-info-row">
                         <div class="info-label modern-info-label">Última Actualización:</div>
-                        <div class="info-value modern-info-value"><?php echo htmlspecialchars(date("d/m/Y H:i", strtotime($ticket_info['fecha_actualizacion_admin']))); ?></div>
+                        <div class="info-value modern-info-value"><?php echo htmlspecialchars(date("d/m/Y H:i", strtotime($ticket_info['ultima_actualizacion']))); ?></div>
                     </div>
                     <?php endif; ?>
                     <div class="info-row modern-info-row">
@@ -171,26 +171,26 @@ require_once '../core/templates/header.php';
                     <h3 class="info-section-title modern-info-section-title">
                         <i class="fas fa-clipboard-check"></i> Resolución del Ticket
                     </h3>
-                    <?php if ($ticket_info['diagnostico']): ?>
+                    <?php if (!empty($ticket_info['diagnostico_admin'])): ?>
                     <div class="detalle-expandible modern-detalle-expandible">
                         <div class="detalle-header modern-detalle-header">
                             <h4>Diagnóstico del Administrador</h4>
                             <i class="fas fa-chevron-down"></i>
                         </div>
                         <div class="detalle-content modern-detalle-content">
-                            <pre><?php echo htmlspecialchars($ticket_info['diagnostico']); ?></pre>
+                            <pre><?php echo htmlspecialchars($ticket_info['diagnostico_admin']); ?></pre>
                         </div>
                     </div>
                     <?php endif; ?>
                     
-                    <?php if ($ticket_info['cierre_solucion']): ?>
+                    <?php if (!empty($ticket_info['solucion_admin'])): ?>
                     <div class="detalle-expandible modern-detalle-expandible">
                         <div class="detalle-header modern-detalle-header">
                             <h4>Solución Aplicada</h4>
                             <i class="fas fa-chevron-down"></i>
                         </div>
                         <div class="detalle-content modern-detalle-content">
-                            <pre><?php echo htmlspecialchars($ticket_info['cierre_solucion']); ?></pre>
+                            <pre><?php echo htmlspecialchars($ticket_info['solucion_admin']); ?></pre>
                         </div>
                     </div>
                     <?php endif; ?>
@@ -202,6 +202,64 @@ require_once '../core/templates/header.php';
                     </div>
                     <?php endif; ?>
                 </div>
+                <?php endif; ?>
+            
+                <?php // SECCIÓN DE FEEDBACK DEL USUARIO ?>
+                <?php if ($ticket_info['estado'] == 'Cerrado'): ?>
+                    <div class="info-section modern-info-section feedback-section">
+                        <h3 class="info-section-title modern-info-section-title">
+                            <i class="fas fa-star-half-alt"></i> Valorar Atención Recibida
+                        </h3>
+                        <?php if (is_null($ticket_info['comentario_usuario']) && is_null($ticket_info['calificacion_usuario'])): ?>
+                            <p>Su opinión es importante para nosotros. Por favor, tómese un momento para valorar el soporte recibido y dejarnos un comentario.</p>
+                            <form action="<?php echo BASE_URL; ?>public/guardar_feedback.php" method="POST" class="feedback-form modern-feedback-form">
+                                <input type="hidden" name="ticket_id" value="<?php echo htmlspecialchars($ticket_info['id']); ?>">
+                                <div class="form-group">
+                                    <label for="calificacion_usuario">Calificación:</label>
+                                    <div class="star-rating">
+                                        <?php for ($i = 5; $i >= 1; $i--): // Invertir el bucle para el efecto CSS de hover correcto ?>
+                                            <input type="radio" id="star<?php echo $i; ?>" name="calificacion_usuario" value="<?php echo $i; ?>" required/>
+                                            <label for="star<?php echo $i; ?>" title="<?php echo $i; ?> estrellas"><i class="fas fa-star"></i></label>
+                                        <?php endfor; ?>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="comentario_usuario">Comentario (opcional):</label>
+                                    <textarea name="comentario_usuario" id="comentario_usuario" rows="4" class="form-control" placeholder="Escriba aquí sus comentarios sobre el soporte recibido..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane"></i> Enviar Feedback
+                                </button>
+                            </form>
+                        <?php else: ?>
+                            <div class="feedback-display modern-feedback-display">
+                                <h4 style="font-family: var(--font-display); color: var(--primary-color); margin-bottom: 15px;"><i class="fas fa-check-circle" style="color: var(--accent-color);"></i> Gracias por su feedback</h4>
+                                <?php if (!empty($ticket_info['calificacion_usuario'])): ?>
+                                <div class="info-row modern-info-row">
+                                    <div class="info-label modern-info-label">Calificación Enviada:</div>
+                                    <div class="info-value modern-info-value star-display">
+                                        <?php for ($s = 1; $s <= 5; $s++): ?>
+                                            <i class="fas fa-star <?php echo ($s <= $ticket_info['calificacion_usuario']) ? 'rated' : ''; ?>"></i>
+                                        <?php endfor; ?>
+                                        <span style="margin-left: 8px;">(<?php echo htmlspecialchars($ticket_info['calificacion_usuario']); ?> de 5 estrellas)</span>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+                                <?php if (!empty($ticket_info['comentario_usuario'])): ?>
+                                <div class="info-row modern-info-row">
+                                    <div class="info-label modern-info-label">Comentario Enviado:</div>
+                                    <div class="info-value modern-info-value"><pre><?php echo htmlspecialchars($ticket_info['comentario_usuario']); ?></pre></div>
+                                </div>
+                                <?php endif; ?>
+                                <?php if (!empty($ticket_info['fecha_feedback'])): ?>
+                                <div class="info-row modern-info-row">
+                                    <div class="info-label modern-info-label">Fecha de Feedback:</div>
+                                    <div class="info-value modern-info-value"><?php echo htmlspecialchars(date("d/m/Y H:i", strtotime($ticket_info['fecha_feedback']))); ?></div>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
             
                 <div class="action-buttons modern-action-buttons">

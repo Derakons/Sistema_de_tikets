@@ -4,7 +4,7 @@ require_once '../core/functions.php';
 
 // Si el admin ya está logueado, redirigir a admin.php
 if (isAdminLoggedIn()) {
-    header("Location: " . BASE_URL . "admin/index.php");
+    header("Location: " . RUTA_APP_URL . "admin/index.php");
     exit;
 }
 

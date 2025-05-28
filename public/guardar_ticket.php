@@ -15,24 +15,39 @@ $success_message = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Limpiar y obtener datos del formulario
-    $detalle_fallo = limpiar_datos($_POST['detalle_fallo']);
-    $descripcion_breve = limpiar_datos($_POST['descripcion_breve']);
+    $asunto = limpiar_datos($_POST['asunto']); // Usar 'asunto' como en el form de public/index.php
+    $descripcion = limpiar_datos($_POST['descripcion']); // Usar 'descripcion' como en el form de public/index.php
     $departamento_id = limpiar_datos($_POST['departamento']); // Ahora es el ID
     $nombre_solicitante = isset($_POST['nombre_solicitante']) ? limpiar_datos($_POST['nombre_solicitante']) : null;
     $contacto_solicitante = isset($_POST['contacto_solicitante']) ? limpiar_datos($_POST['contacto_solicitante']) : null;
 
     // Validaciones básicas (puedes agregar más)
-    if (empty($detalle_fallo) || empty($descripcion_breve) || empty($departamento_id)) {
-        $error_message = "Por favor, complete todos los campos obligatorios.";
+    if (empty($asunto) || empty($descripcion) || empty($departamento_id)) {
+        $error_message = "Por favor, complete todos los campos obligatorios: Asunto, Descripción y Departamento.";
     } else {
         $ticket_id_generado = generar_numero_ticket($conn); // Usar la función para el ID
         $fecha_creacion = date('Y-m-d H:i:s');
         $estado_inicial = 'Abierto';
 
-        $sql = "INSERT INTO tickets (id, fecha_creacion, detalle_fallo, descripcion_breve, id_departamento, nombre_solicitante, contacto_solicitante, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        // Corregir los nombres de las columnas en la consulta SQL
+        $sql = "INSERT INTO tickets (id, fecha_creacion, asunto, descripcion, id_departamento, nombre_solicitante, telefono_solicitante, email_solicitante, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
         if ($stmt) {
-            $stmt->bind_param("ssssisss", $ticket_id_generado, $fecha_creacion, $detalle_fallo, $descripcion_breve, $departamento_id, $nombre_solicitante, $contacto_solicitante, $estado_inicial);
+            // Ajustar bind_param para reflejar los campos correctos y su orden, asumiendo que telefono y email pueden ser null
+            $telefono_solicitante = isset($_POST['telefono_solicitante']) ? limpiar_datos($_POST['telefono_solicitante']) : null;
+            $email_solicitante = isset($_POST['email_solicitante']) ? limpiar_datos($_POST['email_solicitante']) : null;
+
+            $stmt->bind_param("ssssissss", 
+                $ticket_id_generado, 
+                $fecha_creacion, 
+                $asunto, // Usar $asunto
+                $descripcion, // Usar $descripcion
+                $departamento_id, 
+                $nombre_solicitante, 
+                $telefono_solicitante, // Añadido 
+                $email_solicitante, // Añadido
+                $estado_inicial
+            );
             
             if ($stmt->execute()) {
                 $success_message = "Ticket creado exitosamente. Su número de ticket es: <strong>" . htmlspecialchars($ticket_id_generado) . "</strong>. Por favor, guárdelo para futuras consultas.";

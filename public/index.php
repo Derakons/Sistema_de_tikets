@@ -9,12 +9,12 @@ $departamentos = obtener_departamentos($conn);
     <h1>Crear Nuevo Ticket de TI</h1>
     <form action="guardar_ticket.php" method="POST">
         <div class="form-group">
-            <label for="descripcion_breve"> Reporte de averia:</label>
-            <input type="text" id="descripcion_breve" name="descripcion_breve" required>
+            <label for="asunto"> Reporte de averia:</label>
+            <input type="text" id="asunto" name="asunto" required>
         </div>
         <div class="form-group">
-            <label for="detalle_fallo">Detalles de averia:</label>
-            <textarea id="detalle_fallo" name="detalle_fallo" rows="1" required></textarea>
+            <label for="descripcion">Detalles de averia:</label>
+            <textarea id="descripcion" name="descripcion" rows="1" required></textarea>
         </div>
         <div class="form-group">
             <label for="departamento">Departamento de Origen:</label>

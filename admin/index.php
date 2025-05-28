@@ -4,12 +4,12 @@ require_once '../core/functions.php';
 $page_title = "Panel de Administración"; // Definir título específico para esta página
 require_once '../core/templates/header.php';
 
-
 // Proteger esta página
 // requireAdminLogin(); // Descomentar cuando el login esté implementado
 
 $error_message = '';
 $success_message = '';
+$warning_message = ''; // Inicializar warning_message
 
 // Variables para el formulario de edición
 $edit_ticket_id = null;
@@ -19,43 +19,53 @@ $all_tickets = [];
 // Manejar la acción de actualizar ticket
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_ticket'])) {
     $ticket_id_to_update = limpiar_datos($_POST['ticket_id']);
-    $identificacion_tipo = limpiar_datos($_POST['identificacion_tipo']);
+    $tipo_averia_form = limpiar_datos($_POST['tipo_averia']);
     $prioridad = limpiar_datos($_POST['prioridad']);
-    $diagnostico = limpiar_datos($_POST['diagnostico']);
-    $cierre_solucion = limpiar_datos($_POST['cierre_solucion']);
+    $diagnostico = limpiar_datos($_POST['diagnostico_admin']); 
+    $cierre_solucion = limpiar_datos($_POST['solucion_admin']); 
     $estado = limpiar_datos($_POST['estado']);
-    $fecha_actualizacion_admin = date('Y-m-d H:i:s');
+    $fecha_actualizacion = date('Y-m-d H:i:s');
     $fecha_cierre = null;
 
     if ($estado == 'Resuelto' || $estado == 'Cerrado') {
-        $fecha_cierre = $fecha_actualizacion_admin;
+        $fecha_cierre = $fecha_actualizacion;
     }
 
-    $sql_update = "UPDATE tickets SET 
-                    identificacion_tipo = ?,
+    $sql_update = "UPDATE tickets SET
+                    tipo_averia = ?, 
                     prioridad = ?,
-                    diagnostico = ?,
-                    cierre_solucion = ?,
+                    diagnostico_admin = ?,
+                    solucion_admin = ?,
                     estado = ?,
-                    fecha_actualizacion_admin = ?,
+                    ultima_actualizacion = ?, 
                     fecha_cierre = ?
                   WHERE id = ?";
     $stmt_update = $conn->prepare($sql_update);
     if ($stmt_update) {
         $stmt_update->bind_param("ssssssss", 
-            $identificacion_tipo, 
-            $prioridad, 
-            $diagnostico, 
-            $cierre_solucion, 
-            $estado, 
-            $fecha_actualizacion_admin, 
-            $fecha_cierre, 
+            $tipo_averia_form, 
+            $prioridad,
+            $diagnostico,
+            $cierre_solucion,
+            $estado,
+            $fecha_actualizacion, 
+            $fecha_cierre,
             $ticket_id_to_update
         );
         if ($stmt_update->execute()) {
-            $success_message = "Ticket " . htmlspecialchars($ticket_id_to_update) . " actualizado correctamente.";
+            if ($stmt_update->affected_rows > 0) {
+                $success_message = "Ticket " . htmlspecialchars($ticket_id_to_update) . " actualizado correctamente.";
+            } else if ($stmt_update->affected_rows == 0) {
+                if (empty($stmt_update->error)) {
+                     $warning_message = "Se procesó la solicitud para el ticket " . htmlspecialchars($ticket_id_to_update) . ", pero no se realizaron cambios (los datos pueden ser los mismos que los existentes o el ticket no requería actualización).";
+                } else {
+                    $error_message = "Error después de ejecutar la actualización (affected_rows = 0): " . $stmt_update->error;
+                }
+            } else {
+                $error_message = "Error al actualizar el ticket (affected_rows < 0): " . $stmt_update->error;
+            }
         } else {
-            $error_message = "Error al actualizar el ticket: " . $stmt_update->error;
+            $error_message = "Error al ejecutar la actualización: " . $stmt_update->error;
         }
         $stmt_update->close();
     } else {
@@ -66,9 +76,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_ticket'])) {
 // Cargar un ticket para edición si se pasa un ID por GET
 if (isset($_GET['edit_id'])) {
     $edit_ticket_id = limpiar_datos($_GET['edit_id']);
-    $sql_edit = "SELECT t.*, d.nombre_departamento 
-                 FROM tickets t 
-                 LEFT JOIN departamentos d ON t.id_departamento = d.id 
+    $sql_edit = "SELECT t.*, d.nombre_departamento,
+                 t.nombre_solicitante AS solicitante_nombre, 
+                 t.asunto AS ticket_asunto, 
+                 t.descripcion AS ticket_descripcion,
+                 t.archivo_adjunto AS ticket_archivo_adjunto,
+                 t.comentario_usuario, t.calificacion_usuario, t.fecha_feedback,
+                 t.tipo_averia, t.diagnostico_admin, t.solucion_admin
+                 FROM tickets t
+                 LEFT JOIN departamentos d ON t.id_departamento = d.id
                  WHERE t.id = ?";
     $stmt_edit = $conn->prepare($sql_edit);
     if ($stmt_edit) {
@@ -78,17 +94,18 @@ if (isset($_GET['edit_id'])) {
         if ($result_edit->num_rows > 0) {
             $current_ticket = $result_edit->fetch_assoc();
         } else {
-            $error_message = "No se encontró el ticket solicitado para editar.";
-            $edit_ticket_id = null; // Resetear si no se encuentra
+            $error_message = "No se encontró el ticket con ID " . htmlspecialchars($edit_ticket_id);
+            $edit_ticket_id = null; // Para no mostrar el formulario de edición si no hay ticket
         }
         $stmt_edit->close();
     } else {
-        $error_message = "Error al preparar la carga del ticket para edición: " . $conn->error;
+        $error_message = "Error al preparar la consulta de edición: " . $conn->error;
     }
 }
 
 // Obtener todos los tickets para el listado
-$sql_all_tickets = "SELECT t.id, t.fecha_creacion, d.nombre_departamento, t.descripcion_breve AS asunto, t.estado, t.prioridad 
+$sql_all_tickets = "SELECT t.id, t.fecha_creacion, d.nombre_departamento, t.asunto, t.estado, t.prioridad, 
+                    t.calificacion_usuario, t.comentario_usuario 
                     FROM tickets t 
                     LEFT JOIN departamentos d ON t.id_departamento = d.id 
                     ORDER BY t.fecha_creacion DESC";
@@ -369,6 +386,12 @@ $conn->close();
             color: #721c24;
             border-left-color: #f5c6cb;
         }
+
+        .alert-warning { /* Estilo añadido para mensajes de advertencia */
+            background-color: #fff3cd;
+            color: #856404;
+            border-left-color: #ffeeba;
+        }
         
         /* Encabezados de sección */
         .section-header {
@@ -437,10 +460,10 @@ $conn->close();
     </style>
 </head>
 <body>
-    <div class="container-main">
-        <div class="section-header">
+    <div class="container-main">        <div class="section-header">
             <h1 class="section-title"><i class="fas fa-tachometer-alt"></i> Panel de Administración de Tickets</h1>
             <div class="action-buttons">
+                <a href="<?php echo BASE_URL; ?>admin/dashboard.php" class="btn btn-info"><i class="fas fa-chart-pie"></i> Dashboard</a>
                 <a href="<?php echo BASE_URL; ?>admin/index.php" class="btn btn-primary"><i class="fas fa-home"></i> Inicio</a>
                 <a href="<?php echo BASE_URL; ?>admin/logout.php" class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
             </div>
@@ -455,33 +478,37 @@ $conn->close();
             <div class="alert alert-danger">
                 <i class="fas fa-exclamation-circle"></i> <strong>Error:</strong> <?php echo $error_message; ?>
             </div>
-        <?php endif; ?>        <?php if ($edit_ticket_id && $current_ticket): ?>
+        <?php endif; ?>
+        <?php if (!empty($warning_message)): ?>
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> <?php echo $warning_message; ?>
+            </div>
+        <?php endif; ?>
+        <?php if ($edit_ticket_id && $current_ticket): ?>
             <div class="edit-form-container">
-                <div class="section-header">
-                    <h2 class="section-title">
-                        <i class="fas fa-edit"></i> Editando Ticket: #<?php echo htmlspecialchars($current_ticket['id']); ?>
-                        <span class="estado-badge estado-<?php echo strtolower(str_replace(' ', '-', $current_ticket['estado'])); ?>">
-                            <?php echo htmlspecialchars($current_ticket['estado']); ?>
-                        </span>
-                    </h2>
-                </div>
-                
-                <div class="info-original">
-                    <h4>Información Original del Ticket</h4>
-                    <p><strong>Asunto Original (si aplica):</strong> <?php echo htmlspecialchars($current_ticket['descripcion_breve'] ?? 'No especificado'); ?></p>
-                    <p><strong>Descripción Original:</strong> <?php echo nl2br(htmlspecialchars($current_ticket['detalle_fallo'] ?? $current_ticket['descripcion'] ?? 'No especificado')); ?></p>
-                </div>
-
-                <form action="<?php echo BASE_URL; ?>admin/index.php?edit_id=<?php echo htmlspecialchars($edit_ticket_id); ?>" method="POST">
+                <h3 class="section-title"><i class="fas fa-edit"></i> Editar Ticket: <?php echo htmlspecialchars($current_ticket['id']); ?></h3>
+                <hr>
+                <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . '?edit_id=' . htmlspecialchars($edit_ticket_id); ?>">
                     <input type="hidden" name="ticket_id" value="<?php echo htmlspecialchars($current_ticket['id']); ?>">
-                    
-                    <div class="form-group">
-                        <label for="identificacion_tipo">Tipo de Avería (Admin):</label>
-                        <select id="identificacion_tipo" name="identificacion_tipo" required>
-                            <option value="" <?php echo empty($current_ticket['identificacion_tipo']) ? 'selected' : ''; ?>>Seleccione un tipo</option>
-                            <option value="Software" <?php echo (($current_ticket['identificacion_tipo'] ?? '') == 'Software') ? 'selected' : ''; ?>>Software</option>
-                            <option value="Hardware" <?php echo (($current_ticket['identificacion_tipo'] ?? '') == 'Hardware') ? 'selected' : ''; ?>>Hardware</option>
-                            <option value="Otro" <?php echo (($current_ticket['identificacion_tipo'] ?? '') == 'Otro') ? 'selected' : ''; ?>>Otro (Especificar en diagnóstico)</option>
+
+                    <div class="info-original">
+                        <h4><i class="fas fa-user-circle"></i> Información del Solicitante</h4>
+                        <p><strong>Nombre:</strong> <?php echo htmlspecialchars($current_ticket['solicitante_nombre']); ?></p>
+                        <p><strong>Departamento:</strong> <?php echo htmlspecialchars($current_ticket['nombre_departamento']); ?></p>
+                        <p><strong>Fecha Creación:</strong> <?php echo htmlspecialchars(isset($current_ticket['fecha_creacion']) ? (function_exists('formatear_fecha_hora') ? formatear_fecha_hora($current_ticket['fecha_creacion']) : $current_ticket['fecha_creacion']) : 'N/A'); ?></p>
+                    </div>
+
+                    <div class="info-original">
+                        <h4><i class="fas fa-file-medical-alt"></i> Detalles del Ticket (Original)</h4>
+                        <p><strong>Asunto Original:</strong> <?php echo htmlspecialchars($current_ticket['asunto'] ?? 'No especificado'); ?></p>
+                        <p><strong>Descripción Original:</strong> <?php echo nl2br(htmlspecialchars($current_ticket['descripcion'] ?? 'No especificado')); ?></p>
+                    </div>                    <div class="form-group">
+                        <label for="tipo_averia">Tipo de Avería (Admin):</label>
+                        <select id="tipo_averia" name="tipo_averia" required>
+                            <option value="" <?php echo empty($current_ticket['tipo_averia']) ? 'selected' : ''; ?>>Seleccione un tipo</option>
+                            <option value="Software" <?php echo (($current_ticket['tipo_averia'] ?? '') == 'Software') ? 'selected' : ''; ?>>Software</option>
+                            <option value="Hardware" <?php echo (($current_ticket['tipo_averia'] ?? '') == 'Hardware') ? 'selected' : ''; ?>>Hardware</option>
+                            <option value="Otro" <?php echo (($current_ticket['tipo_averia'] ?? '') == 'Otro') ? 'selected' : ''; ?>>Otro (Especificar en diagnóstico)</option>
                         </select>
                     </div>
 
@@ -500,16 +527,13 @@ $conn->close();
                                 <option value="Bajo" <?php echo ($current_ticket['prioridad'] == 'Bajo') ? 'selected' : ''; ?>>Bajo</option>
                             </optgroup>
                         </select>
+                    </div>                    <div class="form-group">
+                        <label for="diagnostico_admin">Diagnóstico del Administrador:</label>
+                        <textarea name="diagnostico_admin" id="diagnostico_admin" rows="4" class="form-control"><?php echo htmlspecialchars($current_ticket['diagnostico_admin'] ?? ''); ?></textarea>
                     </div>
-
                     <div class="form-group">
-                        <label for="diagnostico">Diagnóstico:</label>
-                        <textarea id="diagnostico" name="diagnostico" rows="4"><?php echo htmlspecialchars($current_ticket['diagnostico']); ?></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="cierre_solucion">Cierre (Solución Aplicada):</label>
-                        <textarea id="cierre_solucion" name="cierre_solucion" rows="4"><?php echo htmlspecialchars($current_ticket['cierre_solucion']); ?></textarea>
+                        <label for="solucion_admin">Solución Aplicada por el Administrador:</label>
+                        <textarea name="solucion_admin" id="solucion_admin" rows="4" class="form-control"><?php echo htmlspecialchars($current_ticket['solucion_admin'] ?? ''); ?></textarea>
                     </div>
 
                     <div class="form-group">
@@ -521,7 +545,40 @@ $conn->close();
                             <option value="Resuelto" <?php echo ($current_ticket['estado'] == 'Resuelto') ? 'selected' : ''; ?>>Resuelto</option>
                             <option value="Cerrado" <?php echo ($current_ticket['estado'] == 'Cerrado') ? 'selected' : ''; ?>>Cerrado</option>
                         </select>
-                    </div>                    <div class="action-buttons" style="margin-top: 20px; display: flex; gap: 10px;">
+                    </div>                    <?php // SECCIÓN DE FEEDBACK DEL USUARIO (SOLO VISUALIZACIÓN) ?>
+                    <?php if ($current_ticket['estado'] == 'Cerrado' && !is_null($current_ticket['calificacion_usuario'])): ?>
+                    <div class="info-section modern-info-section feedback-display-admin" style="margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
+                        <h4 style="margin-top:0; margin-bottom:15px; color:var(--primary-color);"><i class="fas fa-comments"></i> Feedback del Usuario</h4>
+                        <div class="info-row" style="margin-bottom: 8px;">
+                            <strong class="info-label" style="min-width: 150px; display: inline-block;">Calificación:</strong>
+                            <span class="info-value star-display">
+                                <?php for ($i = 1; $i <= 5; $i++): ?>
+                                    <i class="fas fa-star <?php echo ($i <= ($current_ticket['calificacion_usuario'] ?? 0)) ? 'rated' : ''; ?>" style="color: <?php echo ($i <= ($current_ticket['calificacion_usuario'] ?? 0)) ? '#ffc107' : '#e0e0e0'; ?>;"></i>
+                                <?php endfor; ?>
+                                (<?php echo htmlspecialchars($current_ticket['calificacion_usuario'] ?? 'N/A'); ?>/5)
+                            </span>
+                        </div>
+                        <?php if (!empty($current_ticket['comentario_usuario'])): ?>
+                        <div class="info-row" style="margin-bottom: 8px;">
+                            <strong class="info-label" style="min-width: 150px; display: inline-block; vertical-align: top;">Comentario:</strong>
+                            <div class="info-value" style="display: inline-block; max-width: calc(100% - 160px);"><pre style="white-space: pre-wrap; margin:0; font-family: inherit;"><?php echo htmlspecialchars($current_ticket['comentario_usuario']); ?></pre></div>
+                        </div>
+                        <?php endif; ?>
+                        <?php if (!empty($current_ticket['fecha_feedback'])): ?>
+                        <div class="info-row">
+                            <strong class="info-label" style="min-width: 150px; display: inline-block;">Fecha de Feedback:</strong>
+                            <span class="info-value"><?php echo htmlspecialchars(date("d/m/Y H:i", strtotime($current_ticket['fecha_feedback']))); ?></span>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <?php elseif ($current_ticket['estado'] == 'Cerrado'): ?>
+                    <div class="info-section modern-info-section feedback-display-admin" style="margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
+                        <h4 style="margin-top:0; margin-bottom:10px; color:var(--primary-color);"><i class="fas fa-comments"></i> Feedback del Usuario</h4>
+                        <p style="margin:0; color: #6c757d;">El usuario aún no ha proporcionado feedback para este ticket.</p>
+                    </div>
+                    <?php endif; ?>
+
+                    <div class="action-buttons" style="margin-top: 20px; display: flex; gap: 10px;">
                         <button type="submit" name="update_ticket" class="btn btn-primary">
                             <i class="fas fa-save"></i> Actualizar Ticket
                         </button>

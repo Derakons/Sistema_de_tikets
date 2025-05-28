@@ -433,3 +433,420 @@ pre {
         border: 1px solid #ccc;
     }
 }
+
+/* Estilos para el sistema de calificación por estrellas */
+.star-rating {
+    display: flex; /* Para alinear estrellas horizontalmente */
+    flex-direction: row-reverse; /* Para que el hover funcione de derecha a izquierda */
+    justify-content: flex-end; /* Alinea las estrellas a la derecha dentro del contenedor */
+    font-size: 1.8em; /* Tamaño de las estrellas */
+    margin-bottom: 15px; /* Espacio debajo de las estrellas */
+}
+
+.star-rating input[type="radio"] {
+    display: none; /* Ocultar los radio buttons reales */
+}
+
+.star-rating label {
+    color: #ddd; /* Color de estrella inactiva/por defecto */
+    cursor: pointer;
+    transition: color 0.2s ease;
+    padding: 0 0.1em; /* Pequeño espacio entre estrellas */
+}
+
+/* Efecto hover: colorea la estrella actual y las anteriores (debido a row-reverse y ~) */
+.star-rating label:hover,
+.star-rating label:hover ~ label,
+.star-rating input[type="radio"]:checked ~ label {
+    color: #ffc107; /* Color de estrella activa/hover (dorado) */
+}
+
+/* Estilo para las estrellas ya calificadas (cuando se muestra el feedback) */
+.feedback-display .star-display .fas.fa-star {
+    color: #ddd; /* Color base para estrellas no calificadas */
+    font-size: 1.2em; /* Ajustar tamaño si es necesario */
+    margin-right: 2px;
+}
+
+.feedback-display .star-display .fas.fa-star.rated {
+    color: #ffc107; /* Color para estrellas calificadas */
+}
+
+/* Mejoras generales para la sección de feedback en seguimiento.php */
+.feedback-section {
+    border-top: 1px solid var(--border-color);
+    padding-top: 20px;
+    margin-top: 25px;
+}
+
+.feedback-form .form-group {
+    margin-bottom: 20px;
+}
+
+.feedback-form label { /* Estilo para el label de calificación y comentario */
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: block;
+    color: var(--text-color);
+}
+
+.feedback-display h4 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    font-family: var(--font-display);
+}
+
+.feedback-display .info-row {
+    margin-bottom: 10px;
+}
+
+
+/* Mejoras para la página de seguimiento de tickets */
+.seguimiento-modern .section-header { /* Título principal de la página "Seguimiento de Ticket" */
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.seguimiento-modern .section-header .section-title { /* Estilo para "Seguimiento de Ticket" */
+    font-family: var(--font-display), sans-serif;
+    color: var(--primary-color);
+    font-size: 1.8em; /* Tamaño del título principal */
+}
+.seguimiento-modern .section-header .section-title .fas {
+    margin-right: 12px;
+}
+
+
+.modern-search-form {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+    align-items: center;
+    background-color: #f8f9fa; /* Fondo ligero para el formulario de búsqueda */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.modern-search-form .form-group {
+    flex-grow: 1;
+    margin-bottom: 0;
+}
+
+.modern-search-form input[type="text"] {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+.modern-search-form input[type="text"]:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+
+.modern-search-form .btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 6px;
+}
+
+.modern-ticket-card {
+    background-color: var(--surface-color);
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+    overflow: hidden; 
+}
+
+.modern-ticket-header {
+    background-color: var(--primary-color);
+    color: var(--text-light-color);
+    padding: 20px 25px; /* Más padding */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modern-ticket-header .modern-ticket-id {
+    font-size: 1.5em; /* Más grande */
+    font-weight: 700; /* Más peso */
+    font-family: var(--font-display);
+}
+.modern-ticket-header .modern-ticket-id .fas {
+    margin-right: 10px;
+}
+
+.modern-ticket-header .ticket-estado {
+    padding: 8px 15px; /* Más padding */
+    border-radius: 20px;
+    font-size: 0.95em; /* Ligeramente más grande */
+    font-weight: 500;
+    background-color: rgba(255,255,255,0.2); 
+}
+.modern-ticket-header .ticket-estado .fas {
+    margin-right: 8px;
+}
+
+.modern-ticket-body {
+    padding: 25px;
+}
+
+.modern-info-section {
+    margin-bottom: 30px; /* Más espacio entre secciones */
+    padding-bottom: 25px; /* Más espacio antes del borde */
+    border-bottom: 1px solid #e9ecef; 
+}
+.modern-info-section:last-of-type { /* Evitar doble borde si es la última sección antes de los botones de acción */
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.modern-info-section-title {
+    font-size: 1.4em; /* Títulos de sección más grandes */
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    font-family: var(--font-display);
+}
+.modern-info-section-title .fas {
+    margin-right: 12px; /* Más espacio para el icono */
+    font-size: 1em; /* Ajustar tamaño del icono relativo al título */
+    color: var(--secondary-color); 
+}
+
+
+.modern-info-row {
+    display: flex;
+    flex-wrap: wrap; /* Para que se ajuste en pantallas pequeñas */
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+    line-height: 1.7; /* Mejorar legibilidad */
+}
+
+.modern-info-row .modern-info-label {
+    font-weight: 600;
+    color: #495057; /* Un gris más oscuro para mejor contraste */
+    width: 220px; /* Ancho fijo para etiquetas, un poco más grande */
+    flex-shrink: 0; 
+    padding-right: 10px; /* Espacio entre etiqueta y valor */
+}
+
+.modern-info-row .modern-info-value {
+    color: var(--text-color);
+    flex-grow: 1;
+}
+.modern-info-row .modern-info-value pre {
+    background-color: #f8f9fa;
+    padding: 12px 15px; /* Más padding */
+    border-radius: 5px; /* Bordes más redondeados */
+    border: 1px solid #e0e0e0; /* Borde más visible */
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 0.9em;
+    line-height: 1.6;
+}
+
+
+/* Barra de progreso */
+.modern-progreso-ticket .modern-barra-progreso {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    height: auto; /* Altura automática basada en contenido */
+    margin-top: 15px;
+    margin-bottom: 30px; 
+    padding: 10px 0; /* Padding vertical para la barra */
+}
+
+.modern-progreso-ticket .linea-progreso.modern-linea-progreso {
+    position: absolute;
+    top: 50%; /* Centrado verticalmente respecto a los iconos */
+    left: 0;
+    height: 8px; 
+    background-color: var(--accent-color); 
+    transform: translateY(-50%);
+    z-index: 1;
+    border-radius: 4px;
+    transition: width 0.5s ease-in-out; /* Animación suave del progreso */
+}
+.modern-progreso-ticket .modern-barra-progreso::before { /* Línea base */
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background-color: #e0e0e0; 
+    transform: translateY(-50%);
+    z-index: 0;
+    border-radius: 4px;
+}
+
+
+.modern-progreso-ticket .etapa.modern-etapa {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    z-index: 2; 
+    width: calc(100% / 5); 
+}
+
+.modern-progreso-ticket .etapa-icono.modern-etapa-icono {
+    width: 36px; /* Iconos más grandes */
+    height: 36px;
+    border-radius: 50%;
+    background-color: #ccc; 
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px; /* Más espacio entre icono y texto */
+    border: 3px solid var(--surface-color); /* Borde para destacar sobre la línea */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    transition: all 0.3s ease; /* Transición para hover/actual */
+}
+.modern-progreso-ticket .etapa-icono.modern-etapa-icono .fas {
+    font-size: 0.9em; /* Ajustar tamaño del icono dentro del círculo */
+}
+
+.modern-progreso-ticket .etapa.completada .etapa-icono.modern-etapa-icono {
+    background-color: var(--accent-color); 
+}
+.modern-progreso-ticket .etapa.actual .etapa-icono.modern-etapa-icono {
+    background-color: var(--secondary-color); 
+    transform: scale(1.15); /* Destacar más la etapa actual */
+    border-color: var(--primary-color); /* Borde más oscuro para la actual */
+}
+
+.modern-progreso-ticket .etapa-texto.modern-etapa-texto {
+    font-size: 0.85em; /* Texto de etapa un poco más grande */
+    color: #555;
+    font-weight: 500;
+}
+.modern-progreso-ticket .etapa.actual .etapa-texto.modern-etapa-texto {
+    font-weight: 700; /* Más peso para el texto actual */
+    color: var(--secondary-color);
+}
+
+
+/* Detalles expandibles (Diagnóstico/Solución) */
+.detalle-expandible.modern-detalle-expandible {
+    margin-bottom: 20px; /* Más espacio */
+    border: 1px solid #e0e0e0; /* Borde más visible */
+    border-radius: 6px; /* Bordes más redondeados */
+    overflow: hidden;
+    background-color: var(--surface-color); /* Fondo blanco */
+}
+.detalle-header.modern-detalle-header {
+    background-color: #f8f9fa; /* Fondo ligero para el header expandible */
+    padding: 12px 18px; /* Más padding */
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s ease;
+}
+.detalle-header.modern-detalle-header:hover {
+    background-color: #e9ecef; /* Ligero cambio al pasar el ratón */
+}
+.detalle-header.modern-detalle-header h4 {
+    margin: 0;
+    font-size: 1.05em; /* Ligeramente más grande */
+    font-weight: 600; /* Más peso */
+    color: var(--primary-color);
+}
+.detalle-header.modern-detalle-header .fas {
+    transition: transform 0.3s ease;
+    color: var(--secondary-color); /* Color del icono chevron */
+}
+.detalle-content.modern-detalle-content {
+    padding: 18px; /* Más padding */
+    border-top: 1px solid #e0e0e0;
+    display: none; 
+    background-color: #fff; /* Asegurar fondo blanco para el contenido */
+}
+.detalle-content.modern-detalle-content pre {
+    margin: 0;
+    background-color: transparent; /* El pre no necesita su propio fondo aquí */
+    border: none;
+    padding: 0;
+}
+.detalle-expandible.open .detalle-header.modern-detalle-header .fas {
+    transform: rotate(180deg);
+}
+
+
+.modern-action-buttons {
+    margin-top: 30px; /* Más espacio arriba */
+    padding-top: 25px; /* Más espacio arriba del borde */
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    gap: 12px; /* Más espacio entre botones */
+    flex-wrap: wrap; 
+}
+
+.modern-action-buttons .btn {
+    font-size: 0.95rem;
+    padding: 10px 18px; /* Botones un poco más grandes */
+    border-radius: 6px;
+}
+.modern-action-buttons .btn .fas {
+    margin-right: 8px;
+}
+
+/* Mensaje cuando no hay ticket */
+.seguimiento-modern .info-section[style*="text-align: center"] {
+    background-color: var(--surface-color);
+    padding: 40px 20px !important; 
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.seguimiento-modern .info-section[style*="text-align: center"] .fas.fa-search {
+    font-size: 3.5em !important; 
+    color: var(--secondary-color) !important; 
+    margin-bottom: 20px !important;
+}
+.seguimiento-modern .info-section[style*="text-align: center"] h3 {
+    font-size: 1.2em;
+    color: var(--text-color) !important;
+    font-family: var(--font-display);
+}
+.seguimiento-modern .info-section[style*="text-align: center"] p {
+    font-size: 0.95em;
+    color: #6c757d !important;
+    margin-bottom: 25px;
+}
+
+/* Ajustes para el formulario de feedback */
+.feedback-form.modern-feedback-form .form-control {
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+}
+.feedback-form.modern-feedback-form .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+.feedback-form.modern-feedback-form .btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 6px;
+}
+
+/* Alertas */
+.alert.modern-alert {
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 25px;
+    font-size: 0.95rem;
+}
+.alert.modern-alert .fas {
+    margin-right: 10px;
+}
