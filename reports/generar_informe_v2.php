@@ -241,7 +241,9 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Informe de Ticket <?php echo htmlspecialchars($ticket_id ?: 'Error'); ?> - Sistema de Tickets</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="assets/css/print-styles.css" media="print">
+    <!-- CSS Unificado del Sistema de Tickets -->
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/unified/print.css" media="print">
     <style>
         :root {
             --primary-color: #0066cc;

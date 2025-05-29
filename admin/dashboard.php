@@ -6,7 +6,6 @@ require_once '../core/functions.php';
 // proteger_pagina_admin(); // Descomentar cuando el sistema de autenticación esté implementado
 
 $page_title = "Dashboard Administrativo";
-require_once '../core/templates/header.php';
 
 // Variables para manejo de acciones
 $success_message = '';
@@ -59,7 +58,7 @@ if ($result_prioridad) {
     }
 }
 
-// Tickets recientes (últimos 5)
+// Tickets recientes (últimos 5) - Intentando con 'id_departamento'
 $recientes_query = "SELECT t.*, d.nombre_departamento FROM tickets t 
                    LEFT JOIN departamentos d ON t.id_departamento = d.id 
                    ORDER BY t.fecha_creacion DESC LIMIT 5";
@@ -69,9 +68,11 @@ if ($result_recientes) {
     while ($row = $result_recientes->fetch_assoc()) {
         $tickets_recientes[] = $row;
     }
+} else {
+    $error_message .= " Error al obtener tickets recientes: " . $conn->error;
 }
 
-// Tickets pendientes (abiertos y en progreso)
+// Tickets pendientes (abiertos y en progreso) - Intentando con 'id_departamento'
 $pendientes_query = "SELECT t.*, d.nombre_departamento FROM tickets t 
                     LEFT JOIN departamentos d ON t.id_departamento = d.id 
                     WHERE t.estado IN ('Abierto', 'En Progreso') 
@@ -82,37 +83,34 @@ if ($result_pendientes) {
     while ($row = $result_pendientes->fetch_assoc()) {
         $tickets_pendientes[] = $row;
     }
+} else {
+    $error_message .= " Error al obtener tickets pendientes: " . $conn->error;
 }
+
 
 // Obtener promedio de calificaciones
 $rating_query = "SELECT AVG(calificacion_usuario) as promedio, COUNT(calificacion_usuario) as total_calificados 
                 FROM tickets WHERE calificacion_usuario IS NOT NULL AND calificacion_usuario > 0";
 $result_rating = $conn->query($rating_query);
-$rating_data = $result_rating ? $result_rating->fetch_assoc() : ['promedio' => 0, 'total_calificado' => 0];
+$rating_data = $result_rating ? $result_rating->fetch_assoc() : ['promedio' => 0, 'total_calificados' => 0];
 
-$conn->close();
-?>
-    $tickets_pendientes[] = $row;
-}
 
-// Feedback reciente
-$feedback_query = "SELECT t.id, t.asunto, t.calificacion_usuario, t.comentario_usuario, t.fecha_feedback, d.nombre_departamento 
-                  FROM tickets t 
-                  LEFT JOIN departamentos d ON t.id_departamento = d.id 
-                  WHERE t.calificacion_usuario IS NOT NULL 
-                  ORDER BY t.fecha_feedback DESC LIMIT 5";
+$feedback_query = "SELECT t.id, t.asunto, t.calificacion_usuario, t.comentario_usuario, t.fecha_feedback, d.nombre_departamento
+                  FROM tickets t
+                  LEFT JOIN departamentos d ON t.id_departamento = d.id
+                  WHERE t.calificacion_usuario IS NOT NULL
+                  ORDER BY t.fecha_feedback DESC LIMIT 5"; // Corregido t.departamento_id a t.id_departamento y eliminadas \
 $result_feedback = $conn->query($feedback_query);
 $feedback_reciente = [];
-while ($row = $result_feedback->fetch_assoc()) {
-    $feedback_reciente[] = $row;
+if ($result_feedback) { 
+    while ($row = $result_feedback->fetch_assoc()) {
+        $feedback_reciente[] = $row;
+    }
+} else {
+    $error_message .= " Error al obtener feedback reciente: " . $conn->error;
 }
 
-// Promedio de calificaciones
-$rating_query = "SELECT AVG(calificacion_usuario) as promedio FROM tickets WHERE calificacion_usuario IS NOT NULL";
-$result_rating = $conn->query($rating_query);
-$promedio_rating = $result_rating->fetch_assoc()['promedio'] ?? 0;
-
-$conn->close();
+// $conn->close(); // No cerramos la conexión aquí, se cerrará al final del script si es necesario o por PHP.
 ?>
 
 <!DOCTYPE html>
@@ -120,561 +118,309 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Administrativo - Sistema de Tickets</title>
-    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css">
+    <title><?php echo htmlspecialchars($page_title); ?> - <?php echo htmlspecialchars(SITE_TITLE); ?></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <style>
-        :root {
-            --primary-color: #0066cc;
-            --secondary-color: #28a745;
-            --warning-color: #ffc107;
-            --danger-color: #dc3545;
-            --info-color: #17a2b8;
-            --light-color: #f8f9fa;
-            --dark-color: #343a40;
-            --border-color: #dee2e6;
-            --shadow-color: rgba(0,0,0,0.1);
-        }
-
-        .dashboard-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f6fa;
-            min-height: calc(100vh - 140px);
-        }
-
-        .dashboard-header {
-            background: linear-gradient(135deg, var(--primary-color), #0052a3);
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 25px var(--shadow-color);
-        }
-
-        .dashboard-title {
-            font-size: 2.5em;
-            margin: 0;
-            font-weight: 600;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .dashboard-subtitle {
-            font-size: 1.1em;
-            margin: 10px 0 0 0;
-            opacity: 0.9;
-        }
-
-        .quick-actions {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-
-        .quick-btn {
-            background: rgba(255,255,255,0.2);
-            border: 2px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 25px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .quick-btn:hover {
-            background: rgba(255,255,255,0.3);
-            border-color: rgba(255,255,255,0.5);
-            transform: translateY(-2px);
-            color: white;
-            text-decoration: none;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-
-        .widget {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 5px 15px var(--shadow-color);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .widget:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        }
-
-        .widget-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        .widget-title {
-            font-size: 1.3em;
-            font-weight: 600;
-            color: var(--dark-color);
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .widget-icon {
-            background: linear-gradient(135deg, var(--primary-color), #0052a3);
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2em;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-        }
-
-        .stat-item {
-            text-align: center;
-            padding: 15px;
-            background: var(--light-color);
-            border-radius: 10px;
-            border-left: 4px solid var(--primary-color);
-        }
-
-        .stat-number {
-            font-size: 2em;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 0.9em;
-            color: var(--dark-color);
-            font-weight: 500;
-        }
-
-        .ticket-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .ticket-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-bottom: 10px;
-            background: white;
-            transition: all 0.3s ease;
-        }
-
-        .ticket-item:hover {
-            border-color: var(--primary-color);
-            box-shadow: 0 3px 10px rgba(0,102,204,0.1);
-        }
-
-        .ticket-info h4 {
-            margin: 0 0 5px 0;
-            font-size: 1.1em;
-            color: var(--dark-color);
-        }
-
-        .ticket-meta {
-            font-size: 0.85em;
-            color: #666;
-        }
-
-        .ticket-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn-mini {
-            padding: 6px 12px;
-            font-size: 0.8em;
-            border-radius: 5px;
-            text-decoration: none;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .btn-primary { background: var(--primary-color); color: white; }
-        .btn-success { background: var(--secondary-color); color: white; }
-        .btn-warning { background: var(--warning-color); color: var(--dark-color); }
-        .btn-danger { background: var(--danger-color); color: white; }
-        .btn-info { background: var(--info-color); color: white; }
-
-        .btn-mini:hover {
-            opacity: 0.8;
-            transform: translateY(-1px);
-        }
-
-        .estado-badge {
-            padding: 4px 8px;
-            border-radius: 15px;
-            font-size: 0.8em;
-            font-weight: 500;
-        }
-
-        .estado-abierto { background: #e9ecef; color: #495057; }
-        .estado-en-progreso { background: #cce5ff; color: #004085; }
-        .estado-esperando { background: #fff3cd; color: #856404; }
-        .estado-resuelto { background: #d1e7dd; color: #0f5132; }
-        .estado-cerrado { background: #cfe2ff; color: #0a58ca; }
-
-        .prioridad-badge {
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 0.75em;
-            font-weight: 600;
-        }
-
-        .prioridad-muy-grave, .prioridad-alto { background: #f8d7da; color: #721c24; }
-        .prioridad-grave, .prioridad-medio { background: #fff3cd; color: #856404; }
-        .prioridad-leve, .prioridad-bajo { background: #d1e7dd; color: #0f5132; }
-
-        .feedback-item {
-            background: var(--light-color);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            border-left: 4px solid var(--warning-color);
-        }
-
-        .feedback-rating {
-            display: flex;
-            gap: 3px;
-            margin-bottom: 8px;
-        }
-
-        .star {
-            color: #ffc107;
-            font-size: 1.1em;
-        }
-
-        .star.empty {
-            color: #e0e0e0;
-        }
-
-        .rating-summary {
-            text-align: center;
-            padding: 20px;
-            background: linear-gradient(135deg, var(--warning-color), #e0a800);
-            color: white;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        .rating-number {
-            font-size: 3em;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        @media (max-width: 768px) {
-            .dashboard-container {
-                padding: 15px;
-            }
-            
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .quick-actions {
-                justify-content: center;
-            }
-            
-            .ticket-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-            
-            .ticket-actions {
-                width: 100%;
-                justify-content: flex-end;
-            }
-        }
-    </style>
+    <link rel="icon" href="<?php echo BASE_URL; ?>img/logo.png" type="image/png">
+    <!-- Los estilos específicos del dashboard que estaban en <style> ahora estarán en main.css o un dashboard.css dedicado -->
 </head>
-<body>
-    <div class="dashboard-container">
-        <!-- Header del Dashboard -->
-        <div class="dashboard-header">
-            <h1 class="dashboard-title">
-                <i class="fas fa-tachometer-alt"></i> Dashboard Administrativo
-            </h1>
-            <p class="dashboard-subtitle">
-                Panel de control centralizado - Bienvenido, <?php echo htmlspecialchars(getAdminFullName()); ?>
-            </p>
-              <div class="quick-actions">
-                <a href="<?php echo BASE_URL; ?>admin/index.php" class="quick-btn">
-                    <i class="fas fa-list"></i> Panel Completo
-                </a>
-                <a href="<?php echo BASE_URL; ?>public/index.php" class="quick-btn">
-                    <i class="fas fa-plus"></i> Crear Ticket
-                </a>
-                <a href="<?php echo BASE_URL; ?>public/seguimiento.php" class="quick-btn">
-                    <i class="fas fa-search"></i> Seguimiento
-                </a>
-                <a href="<?php echo BASE_URL; ?>setup.php" class="quick-btn">
-                    <i class="fas fa-cog"></i> Configuración
-                </a>
-                <a href="<?php echo BASE_URL; ?>admin/logout.php" class="quick-btn">
-                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                </a>
+<body class="has-sidebar"> <?php // Cambiado de dashboard-body a has-sidebar ?>
+
+    <?php include_once __DIR__ . '/../core/templates/sidebar_public.php'; // Incluir sidebar_public ?>
+
+    <div class="dashboard-main-content">
+        <header class="dashboard-top-header">
+            <div class="header-left">
+                <h1 class="dashboard-page-title"><?php echo htmlspecialchars($page_title); ?></h1>
             </div>
-        </div>
+            <div class="header-right">
+                <div class="user-info">
+                    <i class="fas fa-user-circle user-avatar"></i>
+                    <span><?php echo htmlspecialchars(getAdminFullName()); ?></span>
+                </div>
+                <button class="btn btn-outline-light btn-sm" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>/<i class="fas fa-sun"></i>
+                </button>
+            </div>
+        </header>
+
+        <?php if (!empty($success_message)): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle"></i> <?php echo $success_message; ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+        <?php if (!empty($error_message)): ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle"></i> <?php echo $error_message; ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+        <?php if (!empty($warning_message)): ?>
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle"></i> <?php echo $warning_message; ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
 
         <!-- Grid Principal del Dashboard -->
-        <div class="dashboard-grid">
-            <!-- Widget de Estadísticas Generales -->
-            <div class="widget">
-                <div class="widget-header">
-                    <h3 class="widget-title">
-                        <span class="widget-icon"><i class="fas fa-chart-bar"></i></span>
-                        Estadísticas Generales
-                    </h3>
-                </div>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-number"><?php echo $stats['total_tickets']; ?></div>
-                        <div class="stat-label">Total Tickets</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number"><?php echo $stats['por_estado']['Abierto'] ?? 0; ?></div>
-                        <div class="stat-label">Abiertos</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number"><?php echo $stats['por_estado']['En Progreso'] ?? 0; ?></div>
-                        <div class="stat-label">En Progreso</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number"><?php echo $stats['por_estado']['Cerrado'] ?? 0; ?></div>
-                        <div class="stat-label">Cerrados</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Widget de Tickets Pendientes -->
-            <div class="widget">
-                <div class="widget-header">
-                    <h3 class="widget-title">
-                        <span class="widget-icon"><i class="fas fa-clock"></i></span>
-                        Tickets Pendientes
-                    </h3>
-                    <a href="<?php echo BASE_URL; ?>admin/index.php" class="btn-mini btn-primary">Ver Todos</a>
-                </div>
-                <div class="ticket-list">
-                    <?php if (count($tickets_pendientes) > 0): ?>
-                        <?php foreach ($tickets_pendientes as $ticket): ?>
-                        <div class="ticket-item">
-                            <div class="ticket-info">
-                                <h4>#<?php echo htmlspecialchars($ticket['id']); ?> - <?php echo htmlspecialchars($ticket['asunto']); ?></h4>
-                                <div class="ticket-meta">
-                                    <span class="estado-badge estado-<?php echo strtolower(str_replace(' ', '-', $ticket['estado'])); ?>">
-                                        <?php echo htmlspecialchars($ticket['estado']); ?>
-                                    </span>
-                                    <?php if ($ticket['prioridad']): ?>
-                                    <span class="prioridad-badge prioridad-<?php echo strtolower(str_replace(' ', '-', $ticket['prioridad'])); ?>">
-                                        <?php echo htmlspecialchars($ticket['prioridad']); ?>
-                                    </span>
-                                    <?php endif; ?>
-                                    <br>
-                                    <small><?php echo htmlspecialchars($ticket['nombre_departamento'] ?? 'Sin departamento'); ?> - 
-                                    <?php echo date('d/m/Y H:i', strtotime($ticket['fecha_creacion'])); ?></small>
-                                </div>
-                            </div>                            <div class="ticket-actions">
-                                <a href="<?php echo BASE_URL; ?>admin/index.php?edit_id=<?php echo htmlspecialchars($ticket['id']); ?>" class="btn-mini btn-primary">
-                                    <i class="fas fa-edit"></i> Editar
-                                </a>
-                            </div>
+        <div class="row dashboard-grid-cards">
+            <!-- Tarjeta de Estadísticas: Total Tickets -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-total h-100">
+                    <div class="stat-card-body">
+                        <div class="stat-card-icon">
+                            <i class="fas fa-clipboard-list"></i>
                         </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <p style="text-align: center; color: #666; padding: 20px;">
-                            <i class="fas fa-check-circle" style="font-size: 2em; color: var(--secondary-color);"></i><br>
-                            ¡Excelente! No hay tickets pendientes.
-                        </p>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- Widget de Tickets Recientes -->
-            <div class="widget">
-                <div class="widget-header">
-                    <h3 class="widget-title">
-                        <span class="widget-icon"><i class="fas fa-history"></i></span>
-                        Actividad Reciente
-                    </h3>
-                </div>
-                <div class="ticket-list">
-                    <?php foreach ($tickets_recientes as $ticket): ?>
-                    <div class="ticket-item">
-                        <div class="ticket-info">
-                            <h4>#<?php echo htmlspecialchars($ticket['id']); ?> - <?php echo htmlspecialchars($ticket['asunto']); ?></h4>
-                            <div class="ticket-meta">
-                                <span class="estado-badge estado-<?php echo strtolower(str_replace(' ', '-', $ticket['estado'])); ?>">
-                                    <?php echo htmlspecialchars($ticket['estado']); ?>
-                                </span>
-                                <br>
-                                <small><?php echo htmlspecialchars($ticket['nombre_departamento'] ?? 'Sin departamento'); ?> - 
-                                <?php echo date('d/m/Y H:i', strtotime($ticket['fecha_creacion'])); ?></small>
-                            </div>
-                        </div>                        <div class="ticket-actions">
-                            <a href="<?php echo BASE_URL; ?>admin/index.php?edit_id=<?php echo htmlspecialchars($ticket['id']); ?>" class="btn-mini btn-info">
-                                <i class="fas fa-eye"></i> Ver
-                            </a>
+                        <div class="stat-card-content">
+                            <div class="stat-card-title">Total Tickets</div>
+                            <div class="stat-card-value"><?php echo $stats['total_tickets']; ?></div>
                         </div>
                     </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-
-            <!-- Widget de Feedback y Calificaciones -->
-            <div class="widget">
-                <div class="widget-header">
-                    <h3 class="widget-title">
-                        <span class="widget-icon"><i class="fas fa-star"></i></span>
-                        Feedback del Usuario
-                    </h3>
-                </div>
-                
-                <?php if ($promedio_rating > 0): ?>
-                <div class="rating-summary">
-                    <div class="rating-number"><?php echo number_format($promedio_rating, 1); ?>/5</div>
-                    <div>Calificación Promedio</div>
-                    <div class="feedback-rating" style="justify-content: center; margin-top: 10px;">
-                        <?php for ($i = 1; $i <= 5; $i++): ?>
-                            <i class="fas fa-star <?php echo $i <= round($promedio_rating) ? 'star' : 'star empty'; ?>"></i>
-                        <?php endfor; ?>
-                    </div>
-                </div>
-                <?php endif; ?>
-
-                <div style="max-height: 300px; overflow-y: auto;">
-                    <?php if (count($feedback_reciente) > 0): ?>
-                        <?php foreach ($feedback_reciente as $feedback): ?>
-                        <div class="feedback-item">
-                            <div class="feedback-rating">
-                                <?php for ($i = 1; $i <= 5; $i++): ?>
-                                    <i class="fas fa-star <?php echo $i <= $feedback['calificacion_usuario'] ? 'star' : 'star empty'; ?>"></i>
-                                <?php endfor; ?>
-                                <span style="margin-left: 8px; font-weight: 600;">(<?php echo $feedback['calificacion_usuario']; ?>/5)</span>
-                            </div>
-                            <h5 style="margin: 0 0 8px 0; color: var(--dark-color);">
-                                #<?php echo htmlspecialchars($feedback['id']); ?> - <?php echo htmlspecialchars($feedback['asunto']); ?>
-                            </h5>
-                            <?php if ($feedback['comentario_usuario']): ?>
-                            <p style="margin: 0 0 8px 0; font-style: italic; color: #666;">
-                                "<?php echo htmlspecialchars($feedback['comentario_usuario']); ?>"
-                            </p>
-                            <?php endif; ?>
-                            <small style="color: #888;">
-                                <?php echo htmlspecialchars($feedback['nombre_departamento']); ?> - 
-                                <?php echo date('d/m/Y H:i', strtotime($feedback['fecha_feedback'])); ?>
-                            </small>
-                        </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <p style="text-align: center; color: #666; padding: 20px;">
-                            <i class="fas fa-comment-slash" style="font-size: 2em; margin-bottom: 10px;"></i><br>
-                            No hay feedback disponible aún.
-                        </p>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- Widget de Distribución por Prioridad -->
-            <div class="widget">
-                <div class="widget-header">
-                    <h3 class="widget-title">
-                        <span class="widget-icon"><i class="fas fa-exclamation-triangle"></i></span>
-                        Por Prioridad
-                    </h3>
-                </div>
-                <div class="stats-grid">
-                    <?php foreach ($stats['por_prioridad'] as $prioridad => $cantidad): ?>
-                        <?php if ($prioridad): ?>
-                        <div class="stat-item">
-                            <div class="stat-number"><?php echo $cantidad; ?></div>
-                            <div class="stat-label"><?php echo htmlspecialchars($prioridad); ?></div>
-                        </div>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-
-            <!-- Widget de Acciones Rápidas -->
-            <div class="widget">
-                <div class="widget-header">
-                    <h3 class="widget-title">
-                        <span class="widget-icon"><i class="fas fa-tools"></i></span>
-                        Herramientas Rápidas
-                    </h3>
-                </div>                <div style="display: grid; gap: 15px;">
-                    <a href="<?php echo BASE_URL; ?>public/index.php" class="btn-mini btn-success" style="justify-content: center; padding: 15px;">
-                        <i class="fas fa-plus-circle"></i> Crear Nuevo Ticket
+                    <a href="<?php echo BASE_URL; ?>admin/index.php" class="stat-card-footer">
+                        Ver Detalles <i class="fas fa-arrow-circle-right"></i>
                     </a>
-                    <a href="<?php echo BASE_URL; ?>public/seguimiento.php" class="btn-mini btn-info" style="justify-content: center; padding: 15px;">
-                        <i class="fas fa-search"></i> Consultar Estado de Ticket
+                </div>
+            </div>
+
+            <!-- Tarjeta de Estadísticas: Tickets Abiertos -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-open h-100">
+                    <div class="stat-card-body">
+                        <div class="stat-card-icon">
+                            <i class="fas fa-folder-open"></i>
+                        </div>
+                        <div class="stat-card-content">
+                            <div class="stat-card-title">Tickets Abiertos</div>
+                            <div class="stat-card-value"><?php echo $stats['por_estado']['Abierto'] ?? 0; ?></div>
+                        </div>
+                    </div>
+                    <a href="<?php echo BASE_URL; ?>admin/index.php?status=Abierto" class="stat-card-footer">
+                        Ver Detalles <i class="fas fa-arrow-circle-right"></i>
                     </a>
-                    <a href="<?php echo BASE_URL; ?>admin/index.php" class="btn-mini btn-primary" style="justify-content: center; padding: 15px;">
-                        <i class="fas fa-list-alt"></i> Ver Todos los Tickets
+                </div>
+            </div>
+            
+            <!-- Tarjeta de Estadísticas: En Progreso -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-progress h-100">
+                    <div class="stat-card-body">
+                        <div class="stat-card-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="stat-card-content">
+                            <div class="stat-card-title">En Progreso</div>
+                            <div class="stat-card-value"><?php echo $stats['por_estado']['En Progreso'] ?? 0; ?></div>
+                        </div>
+                    </div>
+                     <a href="<?php echo BASE_URL; ?>admin/index.php?status=En Progreso" class="stat-card-footer">
+                        Ver Detalles <i class="fas fa-arrow-circle-right"></i>
                     </a>
-                    <a href="<?php echo BASE_URL; ?>setup.php" class="btn-mini btn-warning" style="justify-content: center; padding: 15px;">
-                        <i class="fas fa-database"></i> Configuración del Sistema
+                </div>
+            </div>
+
+            <!-- Tarjeta de Estadísticas: Tickets Cerrados -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-closed h-100">
+                    <div class="stat-card-body">
+                        <div class="stat-card-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-card-content">
+                            <div class="stat-card-title">Tickets Cerrados</div>
+                            <div class="stat-card-value"><?php echo $stats['por_estado']['Cerrado'] ?? 0; ?></div>
+                        </div>
+                    </div>
+                    <a href="<?php echo BASE_URL; ?>admin/index.php?status=Cerrado" class="stat-card-footer">
+                        Ver Detalles <i class="fas fa-arrow-circle-right"></i>
                     </a>
                 </div>
             </div>
         </div>
-    </div>
 
+
+        <div class="row">
+            <!-- Columna Izquierda: Tickets Recientes y Pendientes -->
+            <div class="col-lg-7 mb-4">
+                <!-- Widget de Tickets Recientes -->
+                <div class="widget modern-widget">
+                    <div class="widget-header">
+                        <h3 class="widget-title"><i class="fas fa-history"></i> Tickets Recientes</h3>
+                        <a href="<?php echo BASE_URL; ?>admin/index.php?filter=recientes" class="btn btn-sm btn-outline-primary">Ver Todos</a>
+                    </div>
+                    <div class="widget-body no-padding">
+                        <?php if (!empty($tickets_recientes)): ?>
+                            <ul class="list-group list-group-flush modern-ticket-list">
+                                <?php foreach ($tickets_recientes as $ticket): ?>
+                                    <li class="list-group-item">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1"><a href="<?php echo BASE_URL; ?>public/seguimiento.php?ticket_id=<?php echo htmlspecialchars($ticket['id']); ?>" target="_blank">#<?php echo htmlspecialchars($ticket['id']); ?> - <?php echo htmlspecialchars(limitar_texto($ticket['asunto'], 40)); ?></a></h5>
+                                            <small class="text-muted"><?php echo tiempo_transcurrido($ticket['fecha_creacion']); ?></small>
+                                        </div>
+                                        <p class="mb-1 text-muted small">
+                                            <?php echo htmlspecialchars($ticket['nombre_usuario'] ?? 'Usuario Desconocido'); ?> | <?php echo htmlspecialchars($ticket['nombre_departamento'] ?? 'N/A'); ?>
+                                        </p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge rounded-pill bg-<?php echo obtener_clase_estado($ticket['estado']); ?>">
+                                                <?php echo htmlspecialchars($ticket['estado']); ?>
+                                            </span>
+                                            <span class="badge rounded-pill bg-<?php echo obtener_clase_prioridad($ticket['prioridad']); ?> text-dark">
+                                                Prioridad: <?php echo htmlspecialchars($ticket['prioridad']); ?>
+                                            </span>
+                                        </div>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php else: ?>
+                            <p class="text-center p-3">No hay tickets recientes.</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Widget de Tickets Pendientes -->
+                <div class="widget modern-widget mt-4">
+                    <div class="widget-header">
+                        <h3 class="widget-title"><i class="fas fa-exclamation-circle"></i> Tickets Pendientes (Abiertos/En Progreso)</h3>
+                        <a href="<?php echo BASE_URL; ?>admin/index.php?filter=pendientes" class="btn btn-sm btn-outline-warning">Ver Todos</a>
+                    </div>
+                    <div class="widget-body no-padding">
+                        <?php if (!empty($tickets_pendientes)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-hover modern-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Asunto</th>
+                                            <th>Usuario</th>
+                                            <th>Estado</th>
+                                            <th>Prioridad</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($tickets_pendientes as $ticket): ?>
+                                            <tr>
+                                                <td><a href="<?php echo BASE_URL; ?>public/seguimiento.php?ticket_id=<?php echo htmlspecialchars($ticket['id']); ?>" target="_blank">#<?php echo htmlspecialchars($ticket['id']); ?></a></td>
+                                                <td><?php echo htmlspecialchars(limitar_texto($ticket['asunto'], 30)); ?></td>
+                                                <td><?php echo htmlspecialchars($ticket['nombre_usuario'] ?? 'Usuario Desconocido'); ?></td>
+                                                <td><span class="badge rounded-pill bg-<?php echo obtener_clase_estado($ticket['estado']); ?>"><?php echo htmlspecialchars($ticket['estado']); ?></span></td>
+                                                <td><span class="badge rounded-pill bg-<?php echo obtener_clase_prioridad($ticket['prioridad']); ?> text-dark"><?php echo htmlspecialchars($ticket['prioridad']); ?></span></td>
+                                                <td>
+                                                    <form method="POST" action="" class="d-inline-block me-1">
+                                                        <input type="hidden" name="ticket_id" value="<?php echo $ticket['id']; ?>">
+                                                        <select name="new_status" class="form-select form-select-sm d-inline-block" style="width: auto; font-size: 0.8rem; padding: 0.2rem 0.5rem;" onchange="this.form.submit()">
+                                                            <option value="Abierto" <?php if($ticket['estado'] == 'Abierto') echo 'selected'; ?>>Abierto</option>
+                                                            <option value="En Progreso" <?php if($ticket['estado'] == 'En Progreso') echo 'selected'; ?>>En Progreso</option>
+                                                            <option value="Resuelto" <?php if($ticket['estado'] == 'Resuelto') echo 'selected'; ?>>Resuelto</option>
+                                                            <option value="Cerrado" <?php if($ticket['estado'] == 'Cerrado') echo 'selected'; ?>>Cerrado</option>
+                                                            <option value="En Espera" <?php if($ticket['estado'] == 'En Espera') echo 'selected'; ?>>En Espera</option>
+                                                        </select>
+                                                        <input type="hidden" name="quick_update" value="1">
+                                                    </form>
+                                                    <a href="<?php echo BASE_URL; ?>admin/index.php?view_ticket=<?php echo $ticket['id']; ?>" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <p class="text-center p-3">No hay tickets pendientes.</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Feedback y Prioridades -->
+            <div class="col-lg-5 mb-4">
+                <!-- Widget de Feedback Reciente -->
+                <div class="widget modern-widget">
+                    <div class="widget-header">
+                        <h3 class="widget-title"><i class="fas fa-comments"></i> Feedback Reciente</h3>
+                    </div>
+                    <div class="widget-body">
+                        <?php if (!empty($feedback_reciente)): ?>
+                            <?php foreach ($feedback_reciente as $feedback): ?>
+                                <div class="feedback-item-modern mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>Ticket #<?php echo htmlspecialchars($feedback['id']); ?>: <?php echo htmlspecialchars(limitar_texto($feedback['asunto'], 25)); ?></strong>
+                                        <div class="rating-stars">
+                                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                                <i class="fas fa-star <?php echo ($i <= $feedback['calificacion_usuario']) ? 'text-warning' : 'text-muted'; ?>"></i>
+                                            <?php endfor; ?>
+                                        </div>
+                                    </div>
+                                    <?php if(!empty($feedback['comentario_usuario'])): ?>
+                                    <p class="text-muted small mt-1 mb-0">"<?php echo htmlspecialchars(limitar_texto($feedback['comentario_usuario'], 80)); ?>"</p>
+                                    <?php endif; ?>
+                                    <small class="text-muted d-block text-end"><?php echo tiempo_transcurrido($feedback['fecha_feedback']); ?></small>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <p class="text-center">No hay feedback reciente.</p>
+                        <?php endif; ?>
+                         <div class="mt-3 text-center">
+                            Promedio General: 
+                            <span class="fw-bold fs-5 <?php echo ($rating_data['promedio'] > 0) ? 'text-warning' : 'text-muted'; ?>">
+                                <?php echo number_format($rating_data['promedio'] ?? 0, 1); ?> <i class="fas fa-star"></i>
+                            </span>
+                            (<?php echo $rating_data['total_calificados'] ?? 0; ?> calificaciones)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Widget de Tickets por Prioridad -->
+                <div class="widget modern-widget mt-4">
+                    <div class="widget-header">
+                        <h3 class="widget-title"><i class="fas fa-exclamation-triangle"></i> Tickets por Prioridad</h3>
+                    </div>
+                    <div class="widget-body">
+                        <?php if (!empty($stats['por_prioridad'])): ?>
+                            <?php 
+                            $prioridades_ordenadas = ['Muy Grave', 'Alto', 'Grave', 'Medio', 'Leve', 'Bajo']; // Orden deseado
+                            ?>
+                            <ul class="list-group list-group-flush">
+                            <?php foreach ($prioridades_ordenadas as $prioridad_nombre): ?>
+                                <?php if (isset($stats['por_prioridad'][$prioridad_nombre]) && $stats['por_prioridad'][$prioridad_nombre] > 0): ?>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <?php echo htmlspecialchars($prioridad_nombre); ?>
+                                    <span class="badge bg-<?php echo obtener_clase_prioridad($prioridad_nombre); ?> rounded-pill text-dark">
+                                        <?php echo $stats['por_prioridad'][$prioridad_nombre]; ?>
+                                    </span>
+                                </li>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                            </ul>
+                        <?php else: ?>
+                            <p class="text-center">No hay datos de prioridad.</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- Cierre de dashboard-main-content -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="<?php echo BASE_URL; ?>assets/js/main.js"></script>
     <script>
-        // Auto-refresh cada 5 minutos
-        setTimeout(function() {
-            window.location.reload();
-        }, 300000);
+        // Simple theme toggler (ejemplo, podría ser más robusto)
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            // Aquí podrías guardar la preferencia en localStorage
+        }
 
-        // Animaciones suaves al cargar
-        document.addEventListener('DOMContentLoaded', function() {
-            const widgets = document.querySelectorAll('.widget');
-            widgets.forEach((widget, index) => {
-                widget.style.opacity = '0';
-                widget.style.transform = 'translateY(20px)';
-                setTimeout(() => {
-                    widget.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-                    widget.style.opacity = '1';
-                    widget.style.transform = 'translateY(0)';
-                }, index * 100);
-            });
-        });
+        // Activar tooltips si se usan
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
     </script>
 </body>
 </html>
+<?php
+// Cerrar la conexión a la base de datos al final del script
+if (isset($conn) && $conn instanceof mysqli) {
+    $conn->close();
+}
+?>

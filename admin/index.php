@@ -1,15 +1,11 @@
 <?php
 require_once '../core/config.php';
 require_once '../core/functions.php';
-$page_title = "Panel de Administración"; // Definir título específico para esta página
-require_once '../core/templates/header.php';
 
-// Proteger esta página
-// requireAdminLogin(); // Descomentar cuando el login esté implementado
+// Proteger esta página - solo administradores
+// proteger_pagina_admin(); // Descomentar cuando el sistema de autenticación esté implementado
 
-$error_message = '';
-$success_message = '';
-$warning_message = ''; // Inicializar warning_message
+$page_title = "Gestión de Tickets"; // Título específico para esta página
 
 // Variables para el formulario de edición
 $edit_ticket_id = null;
@@ -77,7 +73,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_ticket'])) {
 if (isset($_GET['edit_id'])) {
     $edit_ticket_id = limpiar_datos($_GET['edit_id']);
     $sql_edit = "SELECT t.*, d.nombre_departamento,
-                 t.nombre_solicitante AS solicitante_nombre, 
+                 t.nombre_solicitante AS solicitante_nombre,
+                 t.email_solicitante AS email_solicitante, 
                  t.asunto AS ticket_asunto, 
                  t.descripcion AS ticket_descripcion,
                  t.archivo_adjunto AS ticket_archivo_adjunto,
@@ -95,7 +92,7 @@ if (isset($_GET['edit_id'])) {
             $current_ticket = $result_edit->fetch_assoc();
         } else {
             $error_message = "No se encontró el ticket con ID " . htmlspecialchars($edit_ticket_id);
-            $edit_ticket_id = null; // Para no mostrar el formulario de edición si no hay ticket
+            $edit_ticket_id = null; 
         }
         $stmt_edit->close();
     } else {
@@ -104,6 +101,7 @@ if (isset($_GET['edit_id'])) {
 }
 
 // Obtener todos los tickets para el listado
+// Usar d.nombre_departamento consistentemente.
 $sql_all_tickets = "SELECT t.id, t.fecha_creacion, d.nombre_departamento, t.asunto, t.estado, t.prioridad, 
                     t.calificacion_usuario, t.comentario_usuario 
                     FROM tickets t 
@@ -115,634 +113,219 @@ if ($result_all_tickets) {
         $all_tickets[] = $row;
     }
 } else {
-    $error_message = "Error al obtener el listado de tickets: " . $conn->error;
+    // Asegurarse de que $error_message no se sobrescriba si ya hay un error de edición.
+    $error_message = (isset($error_message) ? $error_message . "<br>" : "") . "Error al obtener el listado de tickets: " . $conn->error;
 }
 
-$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Administrador - Sistema de Tickets</title>
-    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css">
+    <title><?php echo htmlspecialchars($page_title); ?> - <?php echo htmlspecialchars(SITE_TITLE); ?></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <style>
-        :root {
-            --primary-color: #0066cc;
-            --secondary-color: #28a745;
-            --tertiary-color: #6c757d;
-            --warning-color: #ffc107;
-            --danger-color: #dc3545;
-            --light-color: #f8f9fa;
-            --dark-color: #2c3e50;
-            --border-color: #e0e0e0;
-            --shadow-color: rgba(0,0,0,0.07);
-        }
-        
-        .container-main {
-            max-width: 1200px;
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 6px 18px var(--shadow-color);
-        }
-        
-        .edit-form-container {
-            margin-top: 30px;
-            padding: 25px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background-color: #fff;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        
-        .info-original { 
-            background-color: #f0f7ff;
-            padding: 15px; 
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid var(--primary-color);
-        }
-        
-        .info-original h4 {
-            color: var(--primary-color);
-            margin-top: 0;
-            margin-bottom: 12px;
-            font-size: 1.1em;
-        }
-        
-        .info-original p { 
-            margin: 8px 0;
-            line-height: 1.5;
-        }
-        
-        /* Estilos para la tabla de tickets */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        
-        thead {
-            background-color: #f8f9fa;
-        }
-        
-        th {
-            padding: 12px 15px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 0.95em;
-            color: var(--dark-color);
-            border-bottom: 2px solid var(--border-color);
-        }
-        
-        td {
-            padding: 12px 15px;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 0.95em;
-        }
-        
-        tr:last-child td {
-            border-bottom: none;
-        }
-        
-        tr:hover {
-            background-color: #f8f9fa;
-        }
-        
-        /* Botones y badges para estados */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-            padding: 8px 15px;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            font-size: 0.95em;
-            font-weight: 500;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            color: white;
-        }
-        
-        .btn-primary {
-            background-color: var(--primary-color);
-        }
-        
-        .btn-primary:hover {
-            background-color: #0052a3;
-        }
-        
-        .btn-success {
-            background-color: var(--secondary-color);
-        }
-        
-        .btn-success:hover {
-            background-color: #218838;
-        }
-        
-        .btn-info {
-            background-color: #17a2b8;
-        }
-        
-        .btn-info:hover {
-            background-color: #138496;
-        }
-        
-        .btn-warning {
-            background-color: var(--warning-color);
-            color: #212529;
-        }
-        
-        .btn-warning:hover {
-            background-color: #e0a800;
-        }
-        
-        .btn-danger {
-            background-color: var(--danger-color);
-        }
-        
-        .btn-danger:hover {
-            background-color: #bd2130;
-        }
-        
-        .btn-secondary {
-            background-color: var(--tertiary-color);
-        }
-        
-        .btn-secondary:hover {
-            background-color: #5a6268;
-        }
-        
-        .btn-sm {
-            padding: 6px 10px;
-            font-size: 0.85em;
-        }
-        
-        .estado-badge {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: 500;
-        }
-        
-        .estado-abierto {
-            background-color: #e9ecef;
-            color: #495057;
-        }
-        
-        .estado-en-progreso {
-            background-color: #cce5ff;
-            color: #004085;
-        }
-        
-        .estado-esperando {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        
-        .estado-resuelto {
-            background-color: #d1e7dd;
-            color: #0f5132;
-        }
-        
-        .estado-cerrado {
-            background-color: #cfe2ff;
-            color: #0a58ca;
-        }
-        
-        .prioridad-alta, .prioridad-muy-grave {
-            background-color: #f8d7da;
-            color: #721c24;
-            font-weight: bold;
-        }
-        
-        .prioridad-media, .prioridad-grave {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        
-        .prioridad-baja, .prioridad-leve {
-            background-color: #d1e7dd;
-            color: #0f5132;
-        }
-        
-        /* Filtros de búsqueda */
-        .filtros-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-        
-        .filtro-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .filtro-label {
-            font-weight: 600;
-            font-size: 0.9em;
-            color: var(--dark-color);
-        }
-        
-        .filtro-select {
-            padding: 6px 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            background-color: white;
-        }
-        
-        /* Mensajes de alerta */
-        .alert {
-            padding: 12px 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            border-left: 4px solid;
-        }
-        
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border-left-color: #c3e6cb;
-        }
-        
-        .alert-danger {
-            background-color: #f8d7da;
-            color: #721c24;
-            border-left-color: #f5c6cb;
-        }
-
-        .alert-warning { /* Estilo añadido para mensajes de advertencia */
-            background-color: #fff3cd;
-            color: #856404;
-            border-left-color: #ffeeba;
-        }
-        
-        /* Encabezados de sección */
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--border-color);
-        }
-        
-        .section-title {
-            font-size: 1.5em;
-            color: var(--primary-color);
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .section-title i {
-            color: var(--primary-color);
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        
-        /* Responsive */
-        @media (max-width: 992px) {
-            .container-main {
-                padding: 15px;
-            }
-            
-            td, th {
-                padding: 10px;
-            }
-            
-            .btn {
-                padding: 6px 10px;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            table {
-                display: block;
-                overflow-x: auto;
-            }
-            
-            .filtros-container {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .section-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-            
-            .action-buttons {
-                width: 100%;
-            }
-        }
-    </style>
+    <link rel="icon" href="<?php echo BASE_URL; ?>img/logo.png" type="image/png">
 </head>
-<body>
-    <div class="container-main">        <div class="section-header">
-            <h1 class="section-title"><i class="fas fa-tachometer-alt"></i> Panel de Administración de Tickets</h1>
-            <div class="action-buttons">
-                <a href="<?php echo BASE_URL; ?>admin/dashboard.php" class="btn btn-info"><i class="fas fa-chart-pie"></i> Dashboard</a>
-                <a href="<?php echo BASE_URL; ?>admin/index.php" class="btn btn-primary"><i class="fas fa-home"></i> Inicio</a>
-                <a href="<?php echo BASE_URL; ?>admin/logout.php" class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
-            </div>
+<body class="has-sidebar"> <?php // Cambio de clase ?>
+
+    <?php include_once __DIR__ . '/../core/templates/sidebar_public.php'; // Sidebar unificado ?>
+
+    <div class="dashboard-main-content page-content"> <?php // Contenedor principal con clase page-content ?>
+        
+        <div class="section-header mb-4"> <?php // Encabezado de página estándar ?>
+            <h1 class="section-title"><i class="fas fa-tasks"></i> <?php echo htmlspecialchars($page_title); ?></h1>
         </div>
 
         <?php if (!empty($success_message)): ?>
-            <div class="alert alert-success">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <i class="fas fa-check-circle"></i> <?php echo $success_message; ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         <?php endif; ?>
         <?php if (!empty($error_message)): ?>
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-circle"></i> <strong>Error:</strong> <?php echo $error_message; ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle"></i> <?php echo $error_message; ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         <?php endif; ?>
         <?php if (!empty($warning_message)): ?>
-            <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle"></i> <?php echo $warning_message; ?>
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle"></i> <?php echo $warning_message; ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         <?php endif; ?>
+
         <?php if ($edit_ticket_id && $current_ticket): ?>
-            <div class="edit-form-container">
-                <h3 class="section-title"><i class="fas fa-edit"></i> Editar Ticket: <?php echo htmlspecialchars($current_ticket['id']); ?></h3>
-                <hr>
-                <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . '?edit_id=' . htmlspecialchars($edit_ticket_id); ?>">
-                    <input type="hidden" name="ticket_id" value="<?php echo htmlspecialchars($current_ticket['id']); ?>">
+            <div class="widget modern-widget mb-4">
+                <div class="widget-header">
+                     <h3 class="widget-title"><i class="fas fa-edit"></i> Editar Ticket: #<?php echo htmlspecialchars($current_ticket['id']); ?></h3>
+                </div>
+                <div class="widget-body">
+                    <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . '?edit_id=' . htmlspecialchars($edit_ticket_id); ?>">
+                        <input type="hidden" name="ticket_id" value="<?php echo htmlspecialchars($current_ticket['id']); ?>">
 
-                    <div class="info-original">
-                        <h4><i class="fas fa-user-circle"></i> Información del Solicitante</h4>
-                        <p><strong>Nombre:</strong> <?php echo htmlspecialchars($current_ticket['solicitante_nombre']); ?></p>
-                        <p><strong>Departamento:</strong> <?php echo htmlspecialchars($current_ticket['nombre_departamento']); ?></p>
-                        <p><strong>Fecha Creación:</strong> <?php echo htmlspecialchars(isset($current_ticket['fecha_creacion']) ? (function_exists('formatear_fecha_hora') ? formatear_fecha_hora($current_ticket['fecha_creacion']) : $current_ticket['fecha_creacion']) : 'N/A'); ?></p>
-                    </div>
-
-                    <div class="info-original">
-                        <h4><i class="fas fa-file-medical-alt"></i> Detalles del Ticket (Original)</h4>
-                        <p><strong>Asunto Original:</strong> <?php echo htmlspecialchars($current_ticket['asunto'] ?? 'No especificado'); ?></p>
-                        <p><strong>Descripción Original:</strong> <?php echo nl2br(htmlspecialchars($current_ticket['descripcion'] ?? 'No especificado')); ?></p>
-                    </div>                    <div class="form-group">
-                        <label for="tipo_averia">Tipo de Avería (Admin):</label>
-                        <select id="tipo_averia" name="tipo_averia" required>
-                            <option value="" <?php echo empty($current_ticket['tipo_averia']) ? 'selected' : ''; ?>>Seleccione un tipo</option>
-                            <option value="Software" <?php echo (($current_ticket['tipo_averia'] ?? '') == 'Software') ? 'selected' : ''; ?>>Software</option>
-                            <option value="Hardware" <?php echo (($current_ticket['tipo_averia'] ?? '') == 'Hardware') ? 'selected' : ''; ?>>Hardware</option>
-                            <option value="Otro" <?php echo (($current_ticket['tipo_averia'] ?? '') == 'Otro') ? 'selected' : ''; ?>>Otro (Especificar en diagnóstico)</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="prioridad">Clasificación/Prioridad:</label>
-                        <select id="prioridad" name="prioridad">
-                            <option value="">Seleccione...</option>
-                            <optgroup label="Problema">
-                                <option value="Muy Grave" <?php echo ($current_ticket['prioridad'] == 'Muy Grave') ? 'selected' : ''; ?>>Muy Grave</option>
-                                <option value="Grave" <?php echo ($current_ticket['prioridad'] == 'Grave') ? 'selected' : ''; ?>>Grave</option>
-                                <option value="Leve" <?php echo ($current_ticket['prioridad'] == 'Leve') ? 'selected' : ''; ?>>Leve</option>
-                            </optgroup>
-                            <optgroup label="Incidente">
-                                <option value="Alto" <?php echo ($current_ticket['prioridad'] == 'Alto') ? 'selected' : ''; ?>>Alto</option>
-                                <option value="Medio" <?php echo ($current_ticket['prioridad'] == 'Medio') ? 'selected' : ''; ?>>Medio</option>
-                                <option value="Bajo" <?php echo ($current_ticket['prioridad'] == 'Bajo') ? 'selected' : ''; ?>>Bajo</option>
-                            </optgroup>
-                        </select>
-                    </div>                    <div class="form-group">
-                        <label for="diagnostico_admin">Diagnóstico del Administrador:</label>
-                        <textarea name="diagnostico_admin" id="diagnostico_admin" rows="4" class="form-control"><?php echo htmlspecialchars($current_ticket['diagnostico_admin'] ?? ''); ?></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="solucion_admin">Solución Aplicada por el Administrador:</label>
-                        <textarea name="solucion_admin" id="solucion_admin" rows="4" class="form-control"><?php echo htmlspecialchars($current_ticket['solucion_admin'] ?? ''); ?></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="estado">Estado del Ticket:</label>
-                        <select id="estado" name="estado" required>
-                            <option value="Abierto" <?php echo ($current_ticket['estado'] == 'Abierto') ? 'selected' : ''; ?>>Abierto</option>
-                            <option value="En Progreso" <?php echo ($current_ticket['estado'] == 'En Progreso') ? 'selected' : ''; ?>>En Progreso</option>
-                            <option value="Esperando Respuesta" <?php echo ($current_ticket['estado'] == 'Esperando Respuesta') ? 'selected' : ''; ?>>Esperando Respuesta del Usuario</option>
-                            <option value="Resuelto" <?php echo ($current_ticket['estado'] == 'Resuelto') ? 'selected' : ''; ?>>Resuelto</option>
-                            <option value="Cerrado" <?php echo ($current_ticket['estado'] == 'Cerrado') ? 'selected' : ''; ?>>Cerrado</option>
-                        </select>
-                    </div>                    <?php // SECCIÓN DE FEEDBACK DEL USUARIO (SOLO VISUALIZACIÓN) ?>
-                    <?php if ($current_ticket['estado'] == 'Cerrado' && !is_null($current_ticket['calificacion_usuario'])): ?>
-                    <div class="info-section modern-info-section feedback-display-admin" style="margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
-                        <h4 style="margin-top:0; margin-bottom:15px; color:var(--primary-color);"><i class="fas fa-comments"></i> Feedback del Usuario</h4>
-                        <div class="info-row" style="margin-bottom: 8px;">
-                            <strong class="info-label" style="min-width: 150px; display: inline-block;">Calificación:</strong>
-                            <span class="info-value star-display">
-                                <?php for ($i = 1; $i <= 5; $i++): ?>
-                                    <i class="fas fa-star <?php echo ($i <= ($current_ticket['calificacion_usuario'] ?? 0)) ? 'rated' : ''; ?>" style="color: <?php echo ($i <= ($current_ticket['calificacion_usuario'] ?? 0)) ? '#ffc107' : '#e0e0e0'; ?>;"></i>
-                                <?php endfor; ?>
-                                (<?php echo htmlspecialchars($current_ticket['calificacion_usuario'] ?? 'N/A'); ?>/5)
-                            </span>
-                        </div>
-                        <?php if (!empty($current_ticket['comentario_usuario'])): ?>
-                        <div class="info-row" style="margin-bottom: 8px;">
-                            <strong class="info-label" style="min-width: 150px; display: inline-block; vertical-align: top;">Comentario:</strong>
-                            <div class="info-value" style="display: inline-block; max-width: calc(100% - 160px);"><pre style="white-space: pre-wrap; margin:0; font-family: inherit;"><?php echo htmlspecialchars($current_ticket['comentario_usuario']); ?></pre></div>
-                        </div>
-                        <?php endif; ?>
-                        <?php if (!empty($current_ticket['fecha_feedback'])): ?>
-                        <div class="info-row">
-                            <strong class="info-label" style="min-width: 150px; display: inline-block;">Fecha de Feedback:</strong>
-                            <span class="info-value"><?php echo htmlspecialchars(date("d/m/Y H:i", strtotime($current_ticket['fecha_feedback']))); ?></span>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                    <?php elseif ($current_ticket['estado'] == 'Cerrado'): ?>
-                    <div class="info-section modern-info-section feedback-display-admin" style="margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
-                        <h4 style="margin-top:0; margin-bottom:10px; color:var(--primary-color);"><i class="fas fa-comments"></i> Feedback del Usuario</h4>
-                        <p style="margin:0; color: #6c757d;">El usuario aún no ha proporcionado feedback para este ticket.</p>
-                    </div>
-                    <?php endif; ?>
-
-                    <div class="action-buttons" style="margin-top: 20px; display: flex; gap: 10px;">
-                        <button type="submit" name="update_ticket" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Actualizar Ticket
-                        </button>
-                        <a href="<?php echo BASE_URL; ?>admin/index.php" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancelar Edición
-                        </a>
-                        <?php if ($current_ticket['estado'] == 'Resuelto' || $current_ticket['estado'] == 'Cerrado'): ?>
-                        <a href="<?php echo BASE_URL; ?>reports/generar_informe_v2.php?ticket_id=<?php echo htmlspecialchars($current_ticket['id']); ?>" target="_blank" class="btn btn-info">
-                            <i class="fas fa-file-alt"></i> Informe Detallado
-                        </a>
-                        <a href="javascript:window.print();" class="btn btn-primary">
-                            <i class="fas fa-print"></i> Imprimir Directo
-                        </a>
-                        <?php if ($current_ticket['estado'] == 'Resuelto' || $current_ticket['estado'] == 'Cerrado'): ?>
-                        <a href="<?php echo BASE_URL; ?>reports/imprimir_informe.php?ticket_id=<?php echo htmlspecialchars($current_ticket['id']); ?>" target="_blank" class="btn btn-success" onclick="setTimeout(function(){window.print();}, 500);">
-                            <i class="fas fa-file-alt"></i> Ver e Imprimir Informe
-                        </a>
-                        <?php endif; ?>
-                        <a href="<?php echo BASE_URL; ?>admin/index.php" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancelar Edición
-                        </a>
-                        <?php endif; ?>
-                    </div>
-                </form>
-            </div>
-        <?php endif; ?>        <div class="section-header">
-            <h2 class="section-title"><i class="fas fa-list-alt"></i> Listado de Tickets</h2>
-        </div>
-        
-        <!-- Filtros de búsqueda -->
-        <div class="filtros-container">
-            <div class="filtro-item">
-                <span class="filtro-label">Estado:</span>
-                <select class="filtro-select" id="filtro-estado">
-                    <option value="">Todos</option>
-                    <option value="Abierto">Abierto</option>
-                    <option value="En Progreso">En Progreso</option>
-                    <option value="Esperando Respuesta">Esperando Respuesta</option>
-                    <option value="Resuelto">Resuelto</option>
-                    <option value="Cerrado">Cerrado</option>
-                </select>
-            </div>
-            <div class="filtro-item">
-                <span class="filtro-label">Prioridad:</span>
-                <select class="filtro-select" id="filtro-prioridad">
-                    <option value="">Todas</option>
-                    <option value="Muy Grave">Muy Grave</option>
-                    <option value="Grave">Grave</option>
-                    <option value="Leve">Leve</option>
-                    <option value="Alto">Alto</option>
-                    <option value="Medio">Medio</option>
-                    <option value="Bajo">Bajo</option>
-                </select>
-            </div>
-            <div class="filtro-item">
-                <button class="btn btn-primary btn-sm" id="btn-aplicar-filtros">
-                    <i class="fas fa-filter"></i> Aplicar Filtros
-                </button>
-                <button class="btn btn-secondary btn-sm" id="btn-limpiar-filtros">
-                    <i class="fas fa-undo"></i> Limpiar
-                </button>
-            </div>
-        </div>
-        
-        <table id="tabla-tickets">
-            <thead>
-                <tr>
-                    <th>N° Ticket</th>
-                    <th>Fecha Creación</th>
-                    <th>Departamento</th>
-                    <th>Asunto</th>
-                    <th>Estado</th>
-                    <th>Prioridad</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (count($all_tickets) > 0): ?>
-                    <?php foreach ($all_tickets as $ticket): ?>                    <tr class="fila-ticket" 
-                        data-estado="<?php echo htmlspecialchars($ticket['estado']); ?>" 
-                        data-prioridad="<?php echo htmlspecialchars($ticket['prioridad']); ?>">
-                        <td>#<?php echo htmlspecialchars($ticket['id']); ?></td>
-                        <td><?php echo htmlspecialchars(date("d/m/Y H:i", strtotime($ticket['fecha_creacion']))); ?></td>
-                        <td><?php echo htmlspecialchars($ticket['nombre_departamento'] ?: 'N/A'); ?></td>
-                        <td><?php echo htmlspecialchars($ticket['asunto']); ?></td>
-                        <td>
-                            <span class="estado-badge estado-<?php echo strtolower(str_replace(' ', '-', $ticket['estado'])); ?>">
-                                <?php echo htmlspecialchars($ticket['estado']); ?>
-                            </span>
-                        </td>
-                        <td>
-                            <span class="estado-badge prioridad-<?php echo strtolower(str_replace(' ', '-', $ticket['prioridad'])); ?>">
-                                <?php echo htmlspecialchars($ticket['prioridad'] ?: 'N/A'); ?>
-                            </span>
-                        </td>
-                        <td>
-                            <div style="display: flex; gap: 5px;">
-                                <a href="<?php echo BASE_URL; ?>admin/index.php?edit_id=<?php echo htmlspecialchars($ticket['id']); ?>" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-edit"></i> Editar
-                                </a>
-                                
-                                <?php if ($ticket['estado'] == 'Resuelto' || $ticket['estado'] == 'Cerrado'): ?>
-                                <div class="dropdown-action">
-                                    <a href="<?php echo BASE_URL; ?>reports/generar_informe_v2.php?ticket_id=<?php echo htmlspecialchars($ticket['id']); ?>" target="_blank" class="btn btn-info btn-sm">
-                                        <i class="fas fa-file-alt"></i> Informe
-                                    </a>
-                                    <a href="<?php echo BASE_URL; ?>reports/imprimir_informe.php?ticket_id=<?php echo htmlspecialchars($ticket['id']); ?>" target="_blank" class="btn btn-success btn-sm">
-                                        <i class="fas fa-print"></i>
-                                    </a>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3 p-3 bg-light border rounded">
+                                    <h5><i class="fas fa-user-circle"></i> Solicitante</h5>
+                                    <p><strong>Nombre:</strong> <?php echo htmlspecialchars($current_ticket['solicitante_nombre']); ?></p>
+                                    <p><strong>Email:</strong> <?php echo htmlspecialchars($current_ticket['email_solicitante'] ?? 'N/A'); ?></p>
+                                    <p><strong>Departamento:</strong> <?php echo htmlspecialchars($current_ticket['nombre_departamento'] ?? 'N/A'); ?></p>
+                                    <p><strong>Fecha Creación:</strong> <?php echo htmlspecialchars(formatear_fecha_hora($current_ticket['fecha_creacion'])); ?></p>
                                 </div>
-                                <?php endif; ?>
                             </div>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
+                            <div class="col-md-6">
+                                <div class="mb-3 p-3 bg-light border rounded">
+                                    <h5><i class="fas fa-file-alt"></i> Detalles del Ticket</h5>
+                                    <p><strong>Asunto:</strong> <?php echo htmlspecialchars($current_ticket['ticket_asunto']); ?></p>
+                                    <p><strong>Descripción:</strong><br><?php echo nl2br(htmlspecialchars($current_ticket['ticket_descripcion'])); ?></p>
+                                    <?php if (!empty($current_ticket['ticket_archivo_adjunto'])): ?>
+                                        <p><strong>Adjunto:</strong> <a href="<?php echo BASE_URL . 'uploads/' . htmlspecialchars(basename($current_ticket['ticket_archivo_adjunto'])); ?>" target="_blank"><?php echo htmlspecialchars(basename($current_ticket['ticket_archivo_adjunto'])); ?></a></p>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="tipo_averia" class="form-label">Tipo de Incidencia/Avería:</label>
+                                <select class="form-select" id="tipo_averia" name="tipo_averia">
+                                    <option value="Hardware" <?php echo ($current_ticket['tipo_averia'] == 'Hardware') ? 'selected' : ''; ?>>Hardware</option>
+                                    <option value="Software" <?php echo ($current_ticket['tipo_averia'] == 'Software') ? 'selected' : ''; ?>>Software</option>
+                                    <option value="Red" <?php echo ($current_ticket['tipo_averia'] == 'Red') ? 'selected' : ''; ?>>Red</option>
+                                    <option value="Impresora" <?php echo ($current_ticket['tipo_averia'] == 'Impresora') ? 'selected' : ''; ?>>Impresora</option>
+                                    <option value="Usuario" <?php echo ($current_ticket['tipo_averia'] == 'Usuario') ? 'selected' : ''; ?>>Usuario</option>
+                                    <option value="Otro" <?php echo ($current_ticket['tipo_averia'] == 'Otro') ? 'selected' : ''; ?>>Otro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="prioridad" class="form-label">Prioridad:</label>
+                                <select class="form-select" id="prioridad" name="prioridad">
+                                    <option value="Bajo" <?php echo ($current_ticket['prioridad'] == 'Bajo') ? 'selected' : ''; ?>>Bajo</option>
+                                    <option value="Medio" <?php echo ($current_ticket['prioridad'] == 'Medio') ? 'selected' : ''; ?>>Medio</option>
+                                    <option value="Alto" <?php echo ($current_ticket['prioridad'] == 'Alto') ? 'selected' : ''; ?>>Alto</option>
+                                    <option value="Grave" <?php echo ($current_ticket['prioridad'] == 'Grave') ? 'selected' : ''; ?>>Grave</option>
+                                    <option value="Muy Grave" <?php echo ($current_ticket['prioridad'] == 'Muy Grave') ? 'selected' : ''; ?>>Muy Grave</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="estado" class="form-label">Estado:</label>
+                                <select class="form-select" id="estado" name="estado">
+                                    <option value="Abierto" <?php echo ($current_ticket['estado'] == 'Abierto') ? 'selected' : ''; ?>>Abierto</option>
+                                    <option value="En Progreso" <?php echo ($current_ticket['estado'] == 'En Progreso') ? 'selected' : ''; ?>>En Progreso</option>
+                                    <option value="En Espera" <?php echo ($current_ticket['estado'] == 'En Espera') ? 'selected' : ''; ?>>En Espera</option>
+                                    <option value="Resuelto" <?php echo ($current_ticket['estado'] == 'Resuelto') ? 'selected' : ''; ?>>Resuelto</option>
+                                    <option value="Cerrado" <?php echo ($current_ticket['estado'] == 'Cerrado') ? 'selected' : ''; ?>>Cerrado</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="diagnostico_admin" class="form-label">Diagnóstico Técnico:</label>
+                            <textarea class="form-control" id="diagnostico_admin" name="diagnostico_admin" rows="3"><?php echo htmlspecialchars($current_ticket['diagnostico_admin'] ?? ''); ?></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="solucion_admin" class="form-label">Solución Aplicada y Cierre:</label>
+                            <textarea class="form-control" id="solucion_admin" name="solucion_admin" rows="3"><?php echo htmlspecialchars($current_ticket['solucion_admin'] ?? ''); ?></textarea>
+                        </div>
+                        
+                        <?php if(isset($current_ticket['comentario_usuario']) && !empty($current_ticket['comentario_usuario'])): ?>
+                        <div class="mb-3 p-3 bg-light border rounded">
+                            <h5><i class="fas fa-comment-dots"></i> Feedback del Usuario</h5>
+                            <p><strong>Calificación:</strong> 
+                                <?php if(isset($current_ticket['calificacion_usuario']) && $current_ticket['calificacion_usuario'] > 0): ?>
+                                    <?php for($i = 1; $i <= 5; $i++): ?>
+                                        <i class="fas fa-star <?php echo ($i <= $current_ticket['calificacion_usuario']) ? 'text-warning' : 'text-muted'; ?>"></i>
+                                    <?php endfor; ?>
+                                    (<?php echo $current_ticket['calificacion_usuario']; ?>/5)
+                                <?php else: ?>
+                                    No calificado
+                                <?php endif; ?>
+                            </p>
+                            <p><strong>Comentario:</strong><br><?php echo nl2br(htmlspecialchars($current_ticket['comentario_usuario'])); ?></p>
+                            <p><small>Fecha Feedback: <?php echo htmlspecialchars(formatear_fecha_hora($current_ticket['fecha_feedback'])); ?></small></p>
+                        </div>
+                        <?php endif; ?>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="submit" name="update_ticket" class="btn btn-primary"><i class="fas fa-save"></i> Actualizar Ticket</button>
+                            <a href="<?php echo BASE_URL; ?>admin/index.php" class="btn btn-secondary"><i class="fas fa-times"></i> Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <div class="widget modern-widget">
+            <div class="widget-header">
+                <h3 class="widget-title"><i class="fas fa-list-ul"></i> Listado de Tickets</h3>
+            </div>
+            <div class="widget-body no-padding">
+                <?php if (!empty($all_tickets)): ?>
+                    <div class="table-responsive">
+                        <table class="table table-hover modern-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Fecha Creación</th>
+                                    <th>Departamento</th>
+                                    <th>Asunto</th>
+                                    <th>Estado</th>
+                                    <th>Prioridad</th>
+                                    <th>Feedback</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($all_tickets as $ticket): ?>
+                                    <tr>
+                                        <td><a href="<?php echo BASE_URL; ?>public/seguimiento.php?numero_ticket=<?php echo htmlspecialchars($ticket['id']); ?>" target="_blank">#<?php echo htmlspecialchars($ticket['id']); ?></a></td>
+                                        <td><?php echo htmlspecialchars(formatear_fecha_hora($ticket['fecha_creacion'])); ?></td>
+                                        <td><?php echo htmlspecialchars($ticket['nombre_departamento'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars(limitar_texto($ticket['asunto'], 40)); ?></td>
+                                        <td><span class="badge rounded-pill bg-<?php echo obtener_clase_estado($ticket['estado']); ?>"><?php echo htmlspecialchars($ticket['estado']); ?></span></td>
+                                        <td><span class="badge rounded-pill bg-<?php echo obtener_clase_prioridad($ticket['prioridad']); ?> text-dark"><?php echo htmlspecialchars($ticket['prioridad'] ?? 'N/A'); ?></span></td>
+                                        <td>
+                                            <?php if (!empty($ticket['calificacion_usuario'])): ?>
+                                                <?php for($i = 1; $i <= 5; $i++): ?>
+                                                    <i class="fas fa-star fa-xs <?php echo ($i <= $ticket['calificacion_usuario']) ? 'text-warning' : 'text-muted'; ?>"></i>
+                                                <?php endfor; ?>
+                                            <?php else: ?>
+                                                <span class="text-muted small">N/A</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <a href="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . '?edit_id=' . htmlspecialchars($ticket['id']); ?>" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i> Editar</a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 <?php else: ?>
-                    <tr>
-                        <td colspan="7" style="text-align:center;">No hay tickets para mostrar.</td>
-                    </tr>
+                    <p class="text-center p-3">No hay tickets registrados.</p>
                 <?php endif; ?>
-            </tbody>
-        </table>
-    </div>    <script src="assets/js/script.js"></script>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="<?php echo BASE_URL; ?>assets/js/main.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Funcionalidad para filtrar tickets
-            const btnAplicarFiltros = document.getElementById('btn-aplicar-filtros');
-            const btnLimpiarFiltros = document.getElementById('btn-limpiar-filtros');
-            const filtroEstado = document.getElementById('filtro-estado');
-            const filtroPrioridad = document.getElementById('filtro-prioridad');
-            const filasTickets = document.querySelectorAll('.fila-ticket');
-            
-            // Aplicar filtros
-            btnAplicarFiltros.addEventListener('click', function() {
-                const estadoSeleccionado = filtroEstado.value;
-                const prioridadSeleccionada = filtroPrioridad.value;
-                
-                filasTickets.forEach(function(fila) {
-                    const estadoFila = fila.getAttribute('data-estado');
-                    const prioridadFila = fila.getAttribute('data-prioridad');
-                    let mostrar = true;
-                    
-                    if (estadoSeleccionado && estadoFila !== estadoSeleccionado) {
-                        mostrar = false;
-                    }
-                    
-                    if (prioridadSeleccionada && prioridadFila !== prioridadSeleccionada) {
-                        mostrar = false;
-                    }
-                    
-                    fila.style.display = mostrar ? '' : 'none';
-                });
-            });
-            
-            // Limpiar filtros
-            btnLimpiarFiltros.addEventListener('click', function() {
-                filtroEstado.value = '';
-                filtroPrioridad.value = '';
-                
-                filasTickets.forEach(function(fila) {
-                    fila.style.display = '';
-                });
-            });
-        });
+        // Activar tooltips si se usan
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
     </script>
 </body>
 </html>
+<?php
+if (isset($conn) && $conn instanceof mysqli) {
+    $conn->close();
+}
+?>

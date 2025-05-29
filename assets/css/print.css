@@ -1,0 +1,420 @@
+/*
+ * SISTEMA DE TICKETS - CSS DE IMPRESIÓN UNIFICADO
+ * ===============================================
+ * Estilos específicos para impresión de reportes e informes
+ * Optimizado para impresoras y generación de PDF
+ */
+
+/* ========================================= */
+/* CONFIGURACIÓN DE PÁGINA */
+/* ========================================= */
+@page {
+    size: A4;
+    margin: 15mm;
+    marks: none;
+    margin-header: 0;
+    margin-footer: 0;
+    padding: 0;
+    @top-center {
+        content: "Sistema de Tickets - Informe";
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 10pt;
+        color: #666;
+    }
+    @bottom-center {
+        content: "Página " counter(page) " de " counter(pages);
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 9pt;
+        color: #666;
+    }
+}
+
+/* ========================================= */
+/* ESTILOS BASE PARA IMPRESIÓN */
+/* ========================================= */
+@media print {
+    * {
+        background: transparent !important;
+        color: #000 !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+    
+    body {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 11pt;
+        line-height: 1.4;
+        color: #000;
+        background: #fff;
+        margin: 0;
+        padding: 0;
+        white-space: pre-wrap;
+    }
+    
+    /* Ocultar elementos no necesarios para impresión */
+    .no-print,
+    .btn,
+    .navbar,
+    .footer,
+    .header,
+    .sidebar,
+    nav,
+    .navigation,
+    .print-hide {
+        display: none !important;
+    }
+    
+    /* Mostrar solo elementos de impresión */
+    .print-only {
+        display: block !important;
+    }
+    
+    /* Evitar saltos de página en elementos importantes */
+    .ticket-report,
+    .table,
+    .form-group,
+    h1, h2, h3, h4, h5, h6 {
+        page-break-inside: avoid;
+    }
+    
+    /* Forzar saltos de página donde sea necesario */
+    .page-break {
+        page-break-before: always;
+    }
+    
+    /* Enlaces en impresión */
+    a:link:after,
+    a:visited:after {
+        content: " (" attr(href) ")";
+        font-size: 90%;
+        color: #666;
+    }
+    
+    a[href^="javascript:"]:after,
+    a[href^="#"]:after {
+        content: "";
+    }
+}
+
+/* ========================================= */
+/* CONTENEDOR PRINCIPAL PARA INFORMES */
+/* ========================================= */
+.ticket-report {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11pt;
+    line-height: 1.4;
+    padding: 0;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: keep-all;
+    max-width: 100%;
+}
+
+.report-header {
+    text-align: center;
+    margin-bottom: 20pt;
+    border-bottom: 2pt solid #000;
+    padding-bottom: 10pt;
+}
+
+.report-title {
+    font-size: 16pt;
+    font-weight: bold;
+    margin-bottom: 5pt;
+    text-transform: uppercase;
+}
+
+.report-subtitle {
+    font-size: 12pt;
+    color: #333;
+    margin-bottom: 10pt;
+}
+
+.report-date {
+    font-size: 10pt;
+    color: #666;
+}
+
+/* ========================================= */
+/* SECCIONES DEL INFORME */
+/* ========================================= */
+.report-section {
+    margin-bottom: 15pt;
+    padding: 5pt 0;
+}
+
+.section-title {
+    font-size: 13pt;
+    font-weight: bold;
+    border-bottom: 1pt solid #333;
+    padding-bottom: 2pt;
+    margin-bottom: 8pt;
+    text-transform: uppercase;
+}
+
+.section-content {
+    margin-left: 10pt;
+}
+
+/* ========================================= */
+/* DATOS DEL TICKET */
+/* ========================================= */
+.ticket-data {
+    display: table;
+    width: 100%;
+    margin-bottom: 15pt;
+}
+
+.ticket-row {
+    display: table-row;
+}
+
+.ticket-label,
+.ticket-value {
+    display: table-cell;
+    padding: 2pt 5pt;
+    border-bottom: 1pt dotted #ccc;
+}
+
+.ticket-label {
+    font-weight: bold;
+    width: 30%;
+    text-align: right;
+}
+
+.ticket-value {
+    width: 70%;
+}
+
+/* ========================================= */
+/* TABLAS EN INFORMES */
+/* ========================================= */
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15pt;
+    font-size: 10pt;
+}
+
+.report-table th,
+.report-table td {
+    border: 1pt solid #333;
+    padding: 3pt 5pt;
+    text-align: left;
+}
+
+.report-table th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+    text-align: center;
+}
+
+.report-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* ========================================= */
+/* HISTORIAL Y COMENTARIOS */
+/* ========================================= */
+.history-section {
+    margin-top: 20pt;
+}
+
+.history-item {
+    margin-bottom: 10pt;
+    padding: 5pt;
+    border-left: 3pt solid #333;
+    padding-left: 8pt;
+}
+
+.history-date {
+    font-weight: bold;
+    font-size: 10pt;
+}
+
+.history-user {
+    font-style: italic;
+    color: #666;
+}
+
+.history-comment {
+    margin-top: 3pt;
+    white-space: pre-wrap;
+}
+
+/* ========================================= */
+/* ESTADÍSTICAS Y MÉTRICAS */
+/* ========================================= */
+.stats-grid {
+    display: table;
+    width: 100%;
+    margin-bottom: 15pt;
+}
+
+.stats-row {
+    display: table-row;
+}
+
+.stats-cell {
+    display: table-cell;
+    width: 25%;
+    text-align: center;
+    padding: 5pt;
+    border: 1pt solid #333;
+}
+
+.stats-number {
+    font-size: 14pt;
+    font-weight: bold;
+}
+
+.stats-label {
+    font-size: 9pt;
+    color: #666;
+    text-transform: uppercase;
+}
+
+/* ========================================= */
+/* FIRMAS Y PIE DE INFORME */
+/* ========================================= */
+.report-footer {
+    margin-top: 30pt;
+    border-top: 2pt solid #000;
+    padding-top: 15pt;
+}
+
+.signature-section {
+    display: table;
+    width: 100%;
+    margin-top: 20pt;
+}
+
+.signature-row {
+    display: table-row;
+}
+
+.signature-cell {
+    display: table-cell;
+    width: 50%;
+    text-align: center;
+    padding: 20pt 10pt;
+}
+
+.signature-line {
+    border-top: 1pt solid #333;
+    margin-top: 30pt;
+    padding-top: 5pt;
+    font-size: 9pt;
+}
+
+/* ========================================= */
+/* INSTRUCCIONES PARA PDF */
+/* ========================================= */
+.pdf-instructions {
+    background-color: #e9f5ff;
+    border: 1px solid #b8daff;
+    color: #004085;
+    padding: 10px 15px;
+    margin: 15px 0;
+    border-radius: 4px;
+    text-align: center;
+    font-family: Arial, sans-serif;
+    font-size: 12pt;
+}
+
+@media print {
+    .pdf-instructions {
+        display: none !important;
+    }
+}
+
+/* ========================================= */
+/* CÓDIGOS QR Y CÓDIGOS DE BARRAS */
+/* ========================================= */
+.qr-code,
+.barcode {
+    text-align: center;
+    margin: 15pt 0;
+}
+
+.qr-code img,
+.barcode img {
+    max-width: 100pt;
+    height: auto;
+}
+
+/* ========================================= */
+/* WATERMARKS Y SELLOS */
+/* ========================================= */
+.watermark {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    font-size: 48pt;
+    color: rgba(0, 0, 0, 0.1);
+    z-index: -1;
+    pointer-events: none;
+}
+
+.stamp {
+    border: 2pt solid #333;
+    border-radius: 10pt;
+    padding: 5pt 10pt;
+    display: inline-block;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.stamp.urgent {
+    color: #d00;
+    border-color: #d00;
+}
+
+.stamp.completed {
+    color: #090;
+    border-color: #090;
+}
+
+.stamp.cancelled {
+    color: #999;
+    border-color: #999;
+}
+
+/* ========================================= */
+/* UTILIDADES DE IMPRESIÓN */
+/* ========================================= */
+.print-break-before {
+    page-break-before: always;
+}
+
+.print-break-after {
+    page-break-after: always;
+}
+
+.print-break-inside-avoid {
+    page-break-inside: avoid;
+}
+
+.print-keep-together {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+/* Tamaños de fuente específicos para impresión */
+.print-text-xs { font-size: 8pt; }
+.print-text-sm { font-size: 9pt; }
+.print-text-base { font-size: 11pt; }
+.print-text-lg { font-size: 13pt; }
+.print-text-xl { font-size: 16pt; }
+
+/* Espaciado específico para impresión */
+.print-mb-sm { margin-bottom: 5pt; }
+.print-mb-md { margin-bottom: 10pt; }
+.print-mb-lg { margin-bottom: 15pt; }
+.print-mb-xl { margin-bottom: 20pt; }
+
+.print-mt-sm { margin-top: 5pt; }
+.print-mt-md { margin-top: 10pt; }
+.print-mt-lg { margin-top: 15pt; }
+.print-mt-xl { margin-top: 20pt; }

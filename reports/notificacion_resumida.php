@@ -39,7 +39,8 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resumen de Notificación - <?php echo htmlspecialchars($ticket_id ?: ''); ?></title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <!-- CSS Unificado del Sistema de Tickets -->
+    <link rel="stylesheet" href="../assets/css/main.css">
     <style>
         body { background: #fff; color: #222; }
         .notificacion-resumida {

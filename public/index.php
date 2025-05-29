@@ -1,35 +1,170 @@
-<?php 
-$page_title = "Crear Nuevo Ticket"; // Definir título específico para esta página
-require_once '../core/templates/header.php'; 
-require_once '../core/functions.php';
-$departamentos = obtener_departamentos($conn);
+<?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+require_once '../core/config.php'; // Para BASE_URL, $conn y functions.php
+
+$page_title = "Crear Nuevo Ticket";
+$departamentos = obtener_departamentos($conn); // Restaurado
+
+$success_message = '';
+if (isset($_SESSION['ticket_success'])) {
+    $success_message = $_SESSION['ticket_success'];
+    unset($_SESSION['ticket_success']);
+}
+
+$error_message = '';
+if (isset($_SESSION['ticket_error'])) {
+    $error_message = $_SESSION['ticket_error'];
+    unset($_SESSION['ticket_error']);
+}
+
 ?>
-<!-- Contenido específico de index.php -->
-<div class="container page-container form-container-specific">
-    <h1>Crear Nuevo Ticket de TI</h1>
-    <form action="guardar_ticket.php" method="POST">
-        <div class="form-group">
-            <label for="asunto"> Reporte de averia:</label>
-            <input type="text" id="asunto" name="asunto" required>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo htmlspecialchars((isset($page_title) ? $page_title : SITE_TITLE) . " - " . SITE_TITLE); ?></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/main.css">
+</head>
+<body class="has-sidebar">
+
+    <?php include_once __DIR__ . '/../core/templates/sidebar_public.php'; ?>
+
+    <div class="dashboard-main-content">
+        <?php // Eliminamos: include_once __DIR__ . '/../core/templates/header.php'; ?>
+
+        <main class="container page-container page-content form-container-specific">
+            <h1><?php echo htmlspecialchars($page_title); ?></h1>
+
+            <?php if ($success_message): ?>
+                <div class="alert alert-success" role="alert">
+                    <?php echo htmlspecialchars($success_message); ?>
+                </div>
+            <?php endif; ?>
+            <?php if ($error_message): ?>
+                <div class="alert alert-danger" role="alert">
+                    <?php echo htmlspecialchars($error_message); ?>
+                </div>
+            <?php endif; ?>
+
+            <form action="guardar_ticket.php" method="POST" enctype="multipart/form-data" class="styled-form needs-validation" novalidate>
+                <div class="form-group">
+                    <label for="nombre_completo">Nombre Completo:</label>
+                    <input type="text" id="nombre_completo" name="nombre_completo" class="form-control" required>
+                    <div class="invalid-feedback">Por favor, ingrese su nombre completo.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Correo Electrónico:</label>
+                    <input type="email" id="email" name="email" class="form-control" required>
+                    <div class="invalid-feedback">Por favor, ingrese un correo electrónico válido.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="telefono">Teléfono (Opcional):</label>
+                    <input type="tel" id="telefono" name="telefono" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="id_departamento">Departamento:</label>
+                    <select id="id_departamento" name="id_departamento" class="form-control" required>
+                        <option value="">Seleccione un departamento</option>
+                        <?php foreach ($departamentos as $depto): ?>
+                            <option value="<?php echo htmlspecialchars($depto['id']); ?>">
+                                <?php echo htmlspecialchars($depto['nombre']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <div class="invalid-feedback">Por favor, seleccione un departamento.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="asunto">Asunto:</label>
+                    <input type="text" id="asunto" name="asunto" class="form-control" required>
+                    <div class="invalid-feedback">Por favor, ingrese el asunto del ticket.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="descripcion">Descripción del Problema:</label>
+                    <textarea id="descripcion" name="descripcion" rows="6" class="form-control" required></textarea>
+                    <div class="invalid-feedback">Por favor, describa el problema.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="archivo_adjunto">Adjuntar Archivo (Opcional):</label>
+                    <input type="file" id="archivo_adjunto" name="archivo_adjunto" class="form-control-file">
+                    <small class="form-text text-muted">Tamaño máximo: 5MB. Tipos permitidos: JPG, PNG, PDF, DOC, DOCX, TXT.</small>
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="terminos" required>
+                        <label class="form-check-label" for="terminos">
+                            Acepto los <a href="#" data-toggle="modal" data-target="#terminosModal">Términos y Condiciones</a>.
+                        </label>
+                        <div class="invalid-feedback">Debe aceptar los términos y condiciones.</div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Enviar Ticket</button>
+            </form>
+        </main>
+
+        <?php // Eliminamos: include_once __DIR__ . '/../core/templates/footer.php'; ?>
+        
+        <!-- Modal Términos y Condiciones (copiado de footer.php) -->
+        <div class="modal fade" id="modalTerminos" tabindex="-1" aria-labelledby="modalTerminosLabel" aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="modalTerminosLabel">Términos y Condiciones</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+              </div>
+              <div class="modal-body">
+                <p>
+                  El uso de este sistema está destinado exclusivamente para la gestión de tickets de soporte técnico de la Municipalidad Provincial de Canchis.<br>
+                  Toda la información registrada será tratada conforme a las políticas de privacidad institucionales.
+                </p>
+                <ul>
+                  <li>El acceso está restringido a usuarios autorizados.</li>
+                  <li>No comparta sus credenciales de acceso.</li>
+                  <li>El mal uso del sistema puede ser sancionado.</li>
+                </ul>
+                <p>Para más información, contacte al área de TI.</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="form-group">
-            <label for="descripcion">Detalles de averia:</label>
-            <textarea id="descripcion" name="descripcion" rows="1" required></textarea>
-        </div>
-        <div class="form-group">
-            <label for="departamento">Departamento de Origen:</label>
-            <select id="departamento" name="departamento" required>
-                <option value="">Seleccione un departamento</option>
-                <?php foreach ($departamentos as $dep): ?>
-                    <option value="<?php echo $dep['id']; ?>"><?php echo htmlspecialchars($dep['nombre_departamento']); ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="nombre_solicitante">Nombre del Solicitante (Opcional):</label>
-            <input type="text" id="nombre_solicitante" name="nombre_solicitante">
-        </div>
-        <button type="submit" class="btn btn-primary">Enviar Ticket</button>    </form>
-    <!-- El enlace de seguimiento ahora está en el header principal -->
-</div>
-<?php require_once '../core/templates/footer.php'; ?>
+
+    </div>
+
+    <!-- Bootstrap 5.3.3 JS Bundle (incluye Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="<?php echo BASE_URL; ?>assets/js/main.js"></script>
+    <script>
+    // Script para validación de Bootstrap (debería ser compatible con BS5)
+    (function() {
+      'use strict';
+      window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+          form.addEventListener('submit', function(event) {
+            if (form.checkValidity() === false) {
+              event.preventDefault();
+              event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+          }, false);
+        });
+      }, false);
+    })();
+    </script>
+</body>
+</html>

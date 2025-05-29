@@ -11,19 +11,14 @@ define('DB_PASS', '');
 define('DB_NAME', 'municipalidad_canchis_tickets');
 
 // Configuración de la aplicación
-// Asumiendo que config.php está en /core/, RUTA_APP es un nivel arriba.
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-$host = $_SERVER['HTTP_HOST'];
-$script_dir = str_replace('\\' , '/', dirname($_SERVER['SCRIPT_NAME'])); // Directorio del script actual
-// Si SCRIPT_NAME es /Sistema de tikets/core/algoscript.php, dirname es /Sistema de tikets/core
-// Necesitamos /Sistema de tikets/
-$app_path = dirname($script_dir);
-if ($app_path === '/' || $app_path === '\\') {
-    $app_path = ''; // Evitar doble barra si está en la raíz del host
-}
-// Asegurarse de que RUTA_APP_URL termine con una barra, incluso si $app_path está vacío (raíz del host)
-$base_url = $protocol . $host . ($app_path ? $app_path . '/' : '/');
-define('RUTA_APP_URL', $base_url);
+$host = $_SERVER['HTTP_HOST']; // Ejemplo: localhost
+
+// Nombre de la carpeta del proyecto. rawurlencode es importante si tiene espacios.
+$project_folder_name = 'Sistema de tikets'; 
+define('BASE_URL', $protocol . $host . '/' . rawurlencode($project_folder_name) . '/'); // ej: http://localhost/Sistema%20de%20tikets/
+
+define('SITE_TITLE', 'Sistema de Tickets de Soporte TI'); // Título del sitio
 
 
 // Conexión al servidor MySQL (sin seleccionar base de datos)
@@ -41,7 +36,7 @@ if ($db_exists_result && $db_exists_result->num_rows == 0) {
     if (basename($_SERVER['PHP_SELF']) != 'setup.php') {
         // No estamos en setup.php, así que redirigimos a setup.php
         // La redirección debe ser a la URL base + setup.php
-        header('Location: ' . RUTA_APP_URL . 'setup.php?error=db_not_found');
+        header('Location: ' . BASE_URL . 'setup.php?error=db_not_found'); // Usar BASE_URL
         exit;
     }
     // Si estamos en setup.php, ese script se encargará de crear la BD.
