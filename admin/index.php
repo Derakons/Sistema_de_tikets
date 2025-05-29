@@ -169,30 +169,37 @@ if ($result_all_tickets) {
 
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="mb-3 p-3 bg-light border rounded">
-                                    <h5><i class="fas fa-user-circle"></i> Solicitante</h5>
-                                    <p><strong>Nombre:</strong> <?php echo htmlspecialchars($current_ticket['solicitante_nombre']); ?></p>
-                                    <p><strong>Email:</strong> <?php echo htmlspecialchars($current_ticket['email_solicitante'] ?? 'N/A'); ?></p>
-                                    <p><strong>Departamento:</strong> <?php echo htmlspecialchars($current_ticket['nombre_departamento'] ?? 'N/A'); ?></p>
-                                    <p><strong>Fecha Creación:</strong> <?php echo htmlspecialchars(formatear_fecha_hora($current_ticket['fecha_creacion'])); ?></p>
+                                <div class="card mb-3">
+                                    <div class="card-header py-1"><i class="fas fa-user-circle me-1"></i> Solicitante</div>
+                                    <div class="card-body py-2">
+                                        <table class="table table-borderless mb-0">
+                                            <tr><th class="py-1">Nombre:</th><td class="py-1"><?php echo htmlspecialchars($current_ticket['solicitante_nombre']); ?></td></tr>
+                                            <tr><th class="py-1">Departamento:</th><td class="py-1"><?php echo htmlspecialchars($current_ticket['nombre_departamento'] ?? 'N/A'); ?></td></tr>
+                                            <tr><th class="py-1">Fecha Creación:</th><td class="py-1"><?php echo htmlspecialchars(formatear_fecha_hora($current_ticket['fecha_creacion'])); ?></td></tr>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="mb-3 p-3 bg-light border rounded">
-                                    <h5><i class="fas fa-file-alt"></i> Detalles del Ticket</h5>
-                                    <p><strong>Asunto:</strong> <?php echo htmlspecialchars($current_ticket['ticket_asunto']); ?></p>
-                                    <p><strong>Descripción:</strong><br><?php echo nl2br(htmlspecialchars($current_ticket['ticket_descripcion'])); ?></p>
-                                    <?php if (!empty($current_ticket['ticket_archivo_adjunto'])): ?>
-                                        <p><strong>Adjunto:</strong> <a href="<?php echo BASE_URL . 'uploads/' . htmlspecialchars(basename($current_ticket['ticket_archivo_adjunto'])); ?>" target="_blank"><?php echo htmlspecialchars(basename($current_ticket['ticket_archivo_adjunto'])); ?></a></p>
-                                    <?php endif; ?>
+                                <div class="card mb-3">
+                                    <div class="card-header py-1"><i class="fas fa-file-alt me-1"></i> Detalles</div>
+                                    <div class="card-body py-2">
+                                        <table class="table table-borderless mb-0">
+                                            <tr><th class="py-1">Asunto:</th><td class="py-1"><?php echo htmlspecialchars($current_ticket['ticket_asunto']); ?></td></tr>
+                                            <tr><th class="py-1">Descripción:</th><td class="py-1"><?php echo nl2br(htmlspecialchars($current_ticket['ticket_descripcion'])); ?></td></tr>
+                                            <?php if (!empty($current_ticket['ticket_archivo_adjunto'])): ?>
+                                            <tr><th class="py-1">Adjunto:</th><td class="py-1"><a href="<?php echo BASE_URL . 'uploads/' . htmlspecialchars(basename($current_ticket['ticket_archivo_adjunto'])); ?>" target="_blank"><?php echo htmlspecialchars(basename($current_ticket['ticket_archivo_adjunto'])); ?></a></td></tr>
+                                            <?php endif; ?>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="tipo_averia" class="form-label">Tipo de Incidencia/Avería:</label>
-                                <select class="form-select" id="tipo_averia" name="tipo_averia">
+                            <div class="col-md-4 mb-2">
+                                <label for="tipo_averia" class="form-label">Tipo de Incidencia:</label>
+                                <select class="form-select form-select-sm" id="tipo_averia" name="tipo_averia">
                                     <option value="Hardware" <?php echo ($current_ticket['tipo_averia'] == 'Hardware') ? 'selected' : ''; ?>>Hardware</option>
                                     <option value="Software" <?php echo ($current_ticket['tipo_averia'] == 'Software') ? 'selected' : ''; ?>>Software</option>
                                     <option value="Red" <?php echo ($current_ticket['tipo_averia'] == 'Red') ? 'selected' : ''; ?>>Red</option>
@@ -201,9 +208,9 @@ if ($result_all_tickets) {
                                     <option value="Otro" <?php echo ($current_ticket['tipo_averia'] == 'Otro') ? 'selected' : ''; ?>>Otro</option>
                                 </select>
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-4 mb-2">
                                 <label for="prioridad" class="form-label">Prioridad:</label>
-                                <select class="form-select" id="prioridad" name="prioridad">
+                                <select class="form-select form-select-sm" id="prioridad" name="prioridad">
                                     <option value="Bajo" <?php echo ($current_ticket['prioridad'] == 'Bajo') ? 'selected' : ''; ?>>Bajo</option>
                                     <option value="Medio" <?php echo ($current_ticket['prioridad'] == 'Medio') ? 'selected' : ''; ?>>Medio</option>
                                     <option value="Alto" <?php echo ($current_ticket['prioridad'] == 'Alto') ? 'selected' : ''; ?>>Alto</option>
@@ -211,9 +218,9 @@ if ($result_all_tickets) {
                                     <option value="Muy Grave" <?php echo ($current_ticket['prioridad'] == 'Muy Grave') ? 'selected' : ''; ?>>Muy Grave</option>
                                 </select>
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-4 mb-2">
                                 <label for="estado" class="form-label">Estado:</label>
-                                <select class="form-select" id="estado" name="estado">
+                                <select class="form-select form-select-sm" id="estado" name="estado">
                                     <option value="Abierto" <?php echo ($current_ticket['estado'] == 'Abierto') ? 'selected' : ''; ?>>Abierto</option>
                                     <option value="En Progreso" <?php echo ($current_ticket['estado'] == 'En Progreso') ? 'selected' : ''; ?>>En Progreso</option>
                                     <option value="En Espera" <?php echo ($current_ticket['estado'] == 'En Espera') ? 'selected' : ''; ?>>En Espera</option>
@@ -223,13 +230,13 @@ if ($result_all_tickets) {
                             </div>
                         </div>
 
-                        <div class="mb-3">
+                        <div class="mb-2">
                             <label for="diagnostico_admin" class="form-label">Diagnóstico Técnico:</label>
-                            <textarea class="form-control" id="diagnostico_admin" name="diagnostico_admin" rows="3"><?php echo htmlspecialchars($current_ticket['diagnostico_admin'] ?? ''); ?></textarea>
+                            <textarea class="form-control form-control-sm" id="diagnostico_admin" name="diagnostico_admin" rows="2"><?php echo htmlspecialchars($current_ticket['diagnostico_admin'] ?? ''); ?></textarea>
                         </div>
-                        <div class="mb-3">
-                            <label for="solucion_admin" class="form-label">Solución Aplicada y Cierre:</label>
-                            <textarea class="form-control" id="solucion_admin" name="solucion_admin" rows="3"><?php echo htmlspecialchars($current_ticket['solucion_admin'] ?? ''); ?></textarea>
+                        <div class="mb-2">
+                            <label for="solucion_admin" class="form-label">Solución Aplicada:</label>
+                            <textarea class="form-control form-control-sm" id="solucion_admin" name="solucion_admin" rows="2"><?php echo htmlspecialchars($current_ticket['solucion_admin'] ?? ''); ?></textarea>
                         </div>
                         
                         <?php if(isset($current_ticket['comentario_usuario']) && !empty($current_ticket['comentario_usuario'])): ?>
@@ -264,9 +271,12 @@ if ($result_all_tickets) {
                 <h3 class="widget-title"><i class="fas fa-list-ul"></i> Listado de Tickets</h3>
             </div>
             <div class="widget-body no-padding">
+                <div class="p-3 border-bottom">
+                    <input type="text" id="searchTickets" class="form-control form-control-sm" placeholder="Buscar tickets...">
+                </div>
                 <?php if (!empty($all_tickets)): ?>
                     <div class="table-responsive">
-                        <table class="table table-hover modern-table">
+                        <table class="table table-hover table-sm modern-table">
                             <thead>
                                 <tr>
                                     <th>ID</th>
@@ -286,8 +296,8 @@ if ($result_all_tickets) {
                                         <td><?php echo htmlspecialchars(formatear_fecha_hora($ticket['fecha_creacion'])); ?></td>
                                         <td><?php echo htmlspecialchars($ticket['nombre_departamento'] ?? 'N/A'); ?></td>
                                         <td><?php echo htmlspecialchars(limitar_texto($ticket['asunto'], 40)); ?></td>
-                                        <td><span class="badge rounded-pill bg-<?php echo obtener_clase_estado($ticket['estado']); ?>"><?php echo htmlspecialchars($ticket['estado']); ?></span></td>
-                                        <td><span class="badge rounded-pill bg-<?php echo obtener_clase_prioridad($ticket['prioridad']); ?> text-dark"><?php echo htmlspecialchars($ticket['prioridad'] ?? 'N/A'); ?></span></td>
+                                        <td><span class="badge rounded-pill bg-<?php echo obtener_clase_estado($ticket['estado']); ?> py-1 px-2"><?php echo htmlspecialchars($ticket['estado']); ?></span></td>
+                                        <td><span class="badge rounded-pill bg-<?php echo obtener_clase_prioridad($ticket['prioridad']); ?> text-dark py-1 px-2"><?php echo htmlspecialchars($ticket['prioridad'] ?? 'N/A'); ?></span></td>
                                         <td>
                                             <?php if (!empty($ticket['calificacion_usuario'])): ?>
                                                 <?php for($i = 1; $i <= 5; $i++): ?>
@@ -298,7 +308,7 @@ if ($result_all_tickets) {
                                             <?php endif; ?>
                                         </td>
                                         <td>
-                                            <a href="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . '?edit_id=' . htmlspecialchars($ticket['id']); ?>" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i> Editar</a>
+                                            <a href="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . '?edit_id=' . htmlspecialchars($ticket['id']); ?>" class="btn btn-sm btn-primary me-1"><i class="fas fa-edit"></i></a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -321,6 +331,14 @@ if ($result_all_tickets) {
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
           return new bootstrap.Tooltip(tooltipTriggerEl)
         })
+
+        // Filtrar tickets en el listado
+        document.getElementById('searchTickets').addEventListener('keyup', function() {
+            var filter = this.value.toLowerCase();
+            document.querySelectorAll('.modern-table tbody tr').forEach(function(row) {
+                row.style.display = row.textContent.toLowerCase().includes(filter) ? '' : 'none';
+            });
+        });
     </script>
 </body>
 </html>

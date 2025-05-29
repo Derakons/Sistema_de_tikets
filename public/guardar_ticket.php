@@ -1,6 +1,5 @@
 <?php
-$page_title = "Guardar Ticket";
-require_once '../core/templates/header.php';
+$page_title = "Resultado del Envío de Ticket";
 require_once '../core/config.php';
 require_once '../core/functions.php';
 
@@ -17,9 +16,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Limpiar y obtener datos del formulario
     $asunto = limpiar_datos($_POST['asunto']); // Usar 'asunto' como en el form de public/index.php
     $descripcion = limpiar_datos($_POST['descripcion']); // Usar 'descripcion' como en el form de public/index.php
-    $departamento_id = limpiar_datos($_POST['departamento']); // Ahora es el ID
-    $nombre_solicitante = isset($_POST['nombre_solicitante']) ? limpiar_datos($_POST['nombre_solicitante']) : null;
-    $contacto_solicitante = isset($_POST['contacto_solicitante']) ? limpiar_datos($_POST['contacto_solicitante']) : null;
+    $departamento_id = limpiar_datos($_POST['id_departamento']); // ID de departamento
+    // Asignar solicitante desde el campo 'nombre_completo'
+    $nombre_solicitante = limpiar_datos($_POST['nombre_completo']);
+    // Sin campos de teléfono ni email en formulario, asignar vacío para evitar null
+    $telefono_solicitante = '';
+    $email_solicitante = '';
 
     // Validaciones básicas (puedes agregar más)
     if (empty($asunto) || empty($descripcion) || empty($departamento_id)) {
@@ -33,9 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $sql = "INSERT INTO tickets (id, fecha_creacion, asunto, descripcion, id_departamento, nombre_solicitante, telefono_solicitante, email_solicitante, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
         if ($stmt) {
-            // Ajustar bind_param para reflejar los campos correctos y su orden, asumiendo que telefono y email pueden ser null
-            $telefono_solicitante = isset($_POST['telefono_solicitante']) ? limpiar_datos($_POST['telefono_solicitante']) : null;
-            $email_solicitante = isset($_POST['email_solicitante']) ? limpiar_datos($_POST['email_solicitante']) : null;
+            // Ya se definieron $nombre_solicitante, $telefono_solicitante y $email_solicitante
 
             $stmt->bind_param("ssssissss", 
                 $ticket_id_generado, 
@@ -44,8 +44,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $descripcion, // Usar $descripcion
                 $departamento_id, 
                 $nombre_solicitante, 
-                $telefono_solicitante, // Añadido 
-                $email_solicitante, // Añadido
+                $telefono_solicitante, // Cadena vacía
+                $email_solicitante, // Cadena vacía
                 $estado_inicial
             );
             
@@ -67,27 +67,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resultado del Envío - Sistema de Tickets</title>
-    <!-- CSS Unificado del Sistema de Tickets -->
-    <link rel="stylesheet" href="../assets/css/main.css">
+    <title><?php echo htmlspecialchars($page_title); ?> - <?php echo htmlspecialchars(SITE_TITLE); ?></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/main.css">
 </head>
-<body>
-    <div class="container">
-        <h1>Resultado del Envío de Ticket</h1>
+<body class="has-sidebar">
+<?php include_once __DIR__ . '/../core/templates/sidebar_public.php'; ?>
+<div class="dashboard-main-content">
+    <main class="container page-container page-content">
+        <h1><?php echo htmlspecialchars($page_title); ?></h1>
         <?php if (!empty($success_message)): ?>
-            <div class="ticket-status" style="background-color: #d4edda; color: #155724; border-color: #c3e6cb; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-                <?php echo $success_message; ?>
-            </div>
+            <div class="alert alert-success" role="alert"><?php echo $success_message; ?></div>
         <?php endif; ?>
         <?php if (!empty($error_message)): ?>
-            <div class="ticket-status" style="background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-                <p><strong>Error:</strong> <?php echo $error_message; ?></p>
-            </div>
+            <div class="alert alert-danger" role="alert"><strong>Error:</strong> <?php echo $error_message; ?></div>
         <?php endif; ?>
-
-        <p><a href="index.php" class="btn">Crear Otro Ticket</a></p>
-        <p><a href="seguimiento.php<?php echo $ticket_id_generado ? '?numero_ticket=' . htmlspecialchars($ticket_id_generado) : ''; ?>" class="btn">Hacer Seguimiento de este Ticket</a></p>
-    </div>
-    <?php require_once '../core/templates/footer.php'; ?>
+        <p><a href="index.php" class="btn btn-primary">Crear Otro Ticket</a></p>
+        <p><a href="seguimiento.php<?php echo $ticket_id_generado ? '?numero_ticket=' . htmlspecialchars($ticket_id_generado) : ''; ?>" class="btn btn-secondary">Hacer Seguimiento de este Ticket</a></p>
+    </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="<?php echo BASE_URL; ?>assets/js/main.js"></script>
 </body>
 </html>

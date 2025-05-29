@@ -37,7 +37,7 @@
     --primary-color: #0d47a1; /* Azul oscuro principal */
     --secondary-color: #1976d2; /* Azul medio */
     --accent-color: #4caf50; /* Verde para acentos */
-    --background-color: #f0f2f5; /* Gris claro para fondo general */
+    --background-color: #bbbbbb63; /* Gris claro para fondo general */
     --surface-color: #ffffff; /* Blanco para superficies como cards */
     --text-color: #212529; /* Negro suave para texto principal */
     --text-light-color: #f8f9fa; /* Blanco/gris muy claro para texto sobre fondos oscuros */
@@ -101,7 +101,6 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    padding-top: 70px; /* Ajustar este valor según la altura final del header */
 }
 
 /* ========================================= */
@@ -126,6 +125,66 @@ body {
     margin-top: 30px;
     border-radius: var(--border-radius);
     padding: 30px;
+}
+
+/* --- Fix layout seguimiento + sidebar --- */
+body.has-sidebar .dashboard-main-content {
+    margin-left: 250px;
+    transition: margin-left 0.3s cubic-bezier(.4,0,.2,1);
+    min-height: 100vh;
+    background: var(--background-color, #f4f6fa);
+}
+@media (max-width: 991px) {
+    body.has-sidebar .dashboard-main-content {
+        margin-left: 0 !important;
+    }
+    .admin-sidebar {
+        left: 0;
+        width: 100vw;
+        height: auto;
+        min-height: 0;
+        position: relative;
+        box-shadow: none;
+        z-index: 1020;
+    }
+}
+
+/* Ajuste para que el contenido no quede debajo del sidebar si el sidebar está colapsado */
+.admin-sidebar.collapsed ~ .dashboard-main-content {
+    margin-left: 60px !important;
+}
+
+@media (max-width: 991px) {
+    .admin-sidebar.collapsed ~ .dashboard-main-content {
+        margin-left: 0 !important;
+    }
+}
+
+/* Ajuste para evitar doble scroll y asegurar que el contenido principal se vea bien */
+.dashboard-main-content {
+    min-height: 100vh;
+    overflow-x: auto;
+    background: var(--background-color, #f4f6fa);
+}
+
+.seguimiento-modern {
+    max-width: 600px;
+    margin: 2.5rem auto 2rem auto;
+    background: var(--surface-color, #fff);
+    border-radius: var(--border-radius, 0.5rem);
+    box-shadow: var(--box-shadow-light, 0 2px 8px rgba(0,0,0,0.08));
+    padding: 2.5rem 2rem 2rem 2rem;
+}
+@media (max-width: 600px) {
+    .seguimiento-modern {
+        padding: 1rem 0.5rem 1rem 0.5rem;
+        margin: 1rem 0;
+    }
+}
+
+.admin-sidebar {
+    z-index: 1050;
+    background: var(--color1, #0a192f);
 }
 
 /* ========================================= */
@@ -613,713 +672,654 @@ textarea.form-control {
 /* ========================================= */
 /* 12. TICKETS ESPECÍFICOS */
 /* ========================================= */
-.ticket-header {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: var(--text-light-color);
-    padding: 2rem;
-    border-radius: var(--border-radius) var(--border-radius) 0 0;
-    margin-bottom: 0;
-}
 
-.ticket-info {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.ticket-status {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    text-transform: uppercase;
-}
-
-.status-abierto {
-    background-color: var(--info-bg);
-    color: var(--info-text);
-}
-
-.status-en-proceso {
-    background-color: var(--warning-bg);
-    color: var(--warning-text);
-}
-
-.status-cerrado {
-    background-color: var(--success-bg);
-    color: var(--success-text);
-}
-
-/* ========================================= */
-/* 13. PROGRESO DE TICKETS */
-/* ========================================= */
-.progreso-ticket {
-    margin-top: 30px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 20px 25px 30px 25px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-}
-
-.barra-progreso {
-    position: relative;
-    height: 16px;
-    background: #e0e0e0;
-    border-radius: 8px;
-    margin: 30px 0 35px 0;
-    overflow: visible;
-}
-
-.linea-progreso {
-    position: absolute;
-    left: 0; 
-    top: 0; 
-    bottom: 0;
-    height: 100%;
-    background: linear-gradient(90deg, #1976d2 60%, #4caf50 100%);
-    border-radius: 8px;
-    transition: width 0.5s cubic-bezier(.4,2,.6,1);
-    z-index: 1;
-}
-
-.etapa {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 110px;
-    text-align: center;
-    z-index: 2;
-    font-size: 0.95em;
-    color: #1976d2;
-    font-weight: 500;
-    transition: color 0.3s;
-}
-
-.etapa.completada {
-    color: #4caf50;
-}
-
-.etapa.actual {
-    color: #ff9800;
-    font-weight: bold;
-}
-
-.etapa .etapa-icono {
-    font-size: 1.5em;
-    margin-bottom: 2px;
-}
-
-.etapa .etapa-texto {
-    font-size: 0.95em;
-    margin-top: 2px;
-}
-
-/* ========================================= */
-/* 14. SETUP/INSTALACIÓN */
-/* ========================================= */
-.container-setup {
-    background-color: var(--surface-color);
-    padding: 30px 40px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    width: 100%;
-    max-width: 900px;
-    margin: 20px auto;
-}
-
-.setup-body {
-    background-color: #eef2f7;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 100vh;
-    padding: 20px;
-}
-
-.setup-step {
-    margin-bottom: 2rem;
-    padding: 1.5rem;
-    background-color: var(--surface-color);
-    border-radius: var(--border-radius);
-    border-left: 4px solid var(--secondary-color);
-}
-
-.setup-progress {
-    background-color: var(--background-color);
-    height: 8px;
-    border-radius: 4px;
-    margin: 1rem 0;
-    overflow: hidden;
-}
-
-.setup-progress-bar {
-    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-    height: 100%;
-    transition: width 0.3s ease;
-}
-
-/* ========================================= */
-/* 15. UTILIDADES */
-/* ========================================= */
-.text-center {
-    text-align: center;
-}
-
-.text-right {
-    text-align: right;
-}
-
-.text-left {
-    text-align: left;
-}
-
-.mb-0 { margin-bottom: 0; }
-.mb-1 { margin-bottom: 0.25rem; }
-.mb-2 { margin-bottom: 0.5rem; }
-.mb-3 { margin-bottom: 1rem; }
-.mb-4 { margin-bottom: 1.5rem; }
-.mb-5 { margin-bottom: 3rem; }
-
-.mt-0 { margin-top: 0; }
-.mt-1 { margin-top: 0.25rem; }
-.mt-2 { margin-top: 0.5rem; }
-.mt-3 { margin-top: 1rem; }
-.mt-4 { margin-top: 1.5rem; }
-.mt-5 { margin-top: 3rem; }
-
-.p-0 { padding: 0; }
-.p-1 { padding: 0.25rem; }
-.p-2 { padding: 0.5rem; }
-.p-3 { padding: 1rem; }
-.p-4 { padding: 1.5rem; }
-.p-5 { padding: 3rem; }
-
-.d-none { display: none; }
-.d-block { display: block; }
-.d-inline { display: inline; }
-.d-inline-block { display: inline-block; }
-.d-flex { display: flex; }
-
-.justify-content-center { justify-content: center; }
-.justify-content-between { justify-content: space-between; }
-.align-items-center { align-items: center; }
-
-.w-100 { width: 100%; }
-.h-100 { height: 100%; }
-
-.rounded { border-radius: var(--border-radius); }
-.shadow { box-shadow: var(--box-shadow); }
-.shadow-light { box-shadow: var(--box-shadow-light); }
-
-/* ========================================= */
-/* 16. RESPONSIVE DESIGN */
-/* ========================================= */
-@media (max-width: 768px) {
-    .container {
-        width: 95%;
-        padding: 15px;
-    }
-    
-    .navbar {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .navbar-nav {
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .ticket-info {
-        grid-template-columns: 1fr;
-    }
-    
-    .btn {
-        width: 100%;
-        margin-bottom: 0.5rem;
-    }
-    
-    h1 {
-        font-size: 2rem;
-    }
-    
-    .container-setup {
-        padding: 20px;
-        margin: 10px;
-    }
-}
-
-@media (max-width: 480px) {
-    h1 {
-        font-size: 1.5rem;
-    }
-    
-    .page-container {
-        padding: 15px;
-        margin-top: 15px;
-    }
-    
-    .etapa {
-        width: 80px;
-        font-size: 0.8em;
-    }
-}
-
-/* Estilos para el contenedor específico del formulario de creación de tickets */
-.form-container-specific {
-    background-color: #ffffff; 
-    padding: 2rem; 
-    border-radius: var(--border-radius-large); 
-    box-shadow: var(--box-shadow-light); 
-    margin-top: 2rem; 
-    max-width: 700px; 
-    margin-left: auto; 
-    margin-right: auto;
-}
-
-.form-container-specific h1 {
-    text-align: center; 
-    margin-bottom: 1.5rem; 
-    color: var(--primary-color) !important; /* Probar con !important y un color definido */
-    font-family: var(--font-display);
-    font-size: 2em !important; /* Hacerlo más obvio */
-}
-
-.form-container-specific .form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: bold;
-    color: var(--text-color) !important; /* Probar con !important */
-}
-
-.form-container-specific .form-group input[type="text"],
-.form-container-specific .form-group textarea,
-.form-container-specific .form-group select {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--border-color) !important; /* Probar con !important */
-    border-radius: var(--border-radius);
-    box-sizing: border-box;
-    background-color: #fff !important; /* Asegurar fondo blanco */
-    color: var(--text-color) !important; /* Asegurar color de texto */
-}
-
-.form-container-specific .form-group input[type="text"]:focus,
-.form-container-specific .form-group textarea:focus,
-.form-container-specific .form-group select:focus {
-    border-color: var(--primary-color) !important; /* Probar con !important */
-    outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color-rgb), 0.25) !important; /* Probar con !important */
-}
-
-.form-container-specific button[type="submit"] {
-    background-color: var(--primary-color) !important; /* Probar con !important */
-    color: var(--text-light-color) !important; /* Probar con !important */
-    padding: 0.75rem 1.5rem;
+/* Estilos para las tarjetas de estadísticas del dashboard */
+.stat-card {
     border: none;
     border-radius: var(--border-radius);
-    cursor: pointer;
-    font-size: 1rem;
-    transition: background-color 0.2s ease-in-out;
-    display: block; /* Para centrarlo si es necesario */
-    margin-left: auto; /* Para centrarlo si es necesario */
-    margin-right: auto; /* Para centrarlo si es necesario */
-    min-width: 150px; /* Ancho mínimo */
-}
-
-.form-container-specific button[type="submit"]:hover {
-    background-color: var(--secondary-color) !important; /* Probar con !important */
-}
-
-.header .navbar .navbar-nav .nav-link,
-.header .navbar .navbar-nav .nav-link:focus,
-.header .navbar .navbar-nav .nav-link:hover {
-    color: var(--text-light-color) !important; /* Aumentar especificidad y !important para prueba */
-}
-
-/* ========================================= */
-/* 17. PÁGINA DE SEGUIMIENTO DE TICKETS (MODERN) */
-/* ========================================= */
-.seguimiento-modern .section-header {
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.seguimiento-modern .section-title {
-    color: var(--primary-color);
-    font-size: 2.2rem;
-}
-
-.seguimiento-modern .section-title i {
-    margin-right: 0.75rem;
-    color: var(--secondary-color);
-}
-
-.modern-search-form {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    background-color: var(--surface-color);
-    padding: 1.5rem;
-    border-radius: var(--border-radius);
     box-shadow: var(--box-shadow-light);
-}
-
-.modern-search-form .form-group {
-    flex-grow: 1;
-    margin-bottom: 0;
-}
-
-.modern-search-form input[type="text"] {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    font-size: 1.1rem;
-}
-
-.modern-search-form input[type="text"]:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color-rgb, 13, 71, 161), 0.25); /* Asegúrate que --primary-color-rgb esté definido o usa un valor directo */
-}
-
-.modern-search-form .btn {
-    padding: 0.75rem 1.5rem;
-    font-size: 1.1rem;
-    min-width: 150px;
-}
-.modern-search-form .btn i {
-    margin-right: 0.5rem;
-}
-
-.modern-alert {
-    display: flex;
-    align-items: center;
-    padding: 1rem 1.25rem;
-}
-
-/* ========================================= */
-/* 18. ESTILOS DEL DASHBOARD ADMINISTRATIVO */
-/* ========================================= */
-
-.dashboard-body {
-    display: flex;
-    background-color: #f4f7fc; /* Un fondo ligeramente diferente para el área del dashboard */
-    padding-top: 0; /* El header fijo ya no está aquí, el sidebar y main content manejan su propio espacio */
-}
-
-.dashboard-sidebar {
-    width: 260px;
-    background: linear-gradient(180deg, var(--color1) 0%, var(--color3) 100%);
-    color: var(--text-light-color);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    background-color: var(--surface-color);
     display: flex;
     flex-direction: column;
-    height: 100vh; /* Ocupa toda la altura */
-    position: fixed; /* Fijo en la pantalla */
-    left: 0;
-    top: 0;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-    z-index: 1000; /* Asegurar que esté por encima del contenido pero debajo de modales si es necesario */
-}
-
-.sidebar-header {
-    padding: 1.2rem 1rem;
-    text-align: center;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-.sidebar-logo {
-    width: 50px;
-    height: 50px;
-    margin-bottom: 0.5rem;
-    border-radius: 50%;
-    background-color: rgba(255,255,255,0.9);
-    padding: 5px;
-}
-
-.sidebar-title {
-    font-size: 1.2rem;
-    margin: 0;
-    font-family: var(--font-display);
-    color: #fff;
-}
-
-.sidebar-nav {
-    flex-grow: 1;
-    padding-top: 1rem;
-}
-
-.sidebar-nav .nav-link {
-    display: flex;
-    align-items: center;
-    padding: 0.8rem 1.2rem;
-    color: #c5d6de; /* Color de texto más suave */
-    text-decoration: none;
-    font-size: 0.95rem;
-    border-left: 3px solid transparent;
-    transition: all 0.3s ease;
-}
-
-.sidebar-nav .nav-link i {
-    margin-right: 0.8rem;
-    width: 20px; /* Ancho fijo para iconos */
-    text-align: center;
-    font-size: 1.1em;
-}
-
-.sidebar-nav .nav-link:hover {
-    background-color: rgba(255,255,255,0.05);
-    color: #fff;
-    border-left-color: var(--accent-color);
-}
-
-.sidebar-nav .nav-link.active {
-    background-color: rgba(255,255,255,0.1);
-    color: #fff;
-    font-weight: 500;
-    border-left-color: var(--accent-color); /* O un color más brillante */
-}
-
-.sidebar-footer {
-    padding: 1rem;
-    border-top: 1px solid rgba(255,255,255,0.1);
-}
-.sidebar-footer .logout-link {
-    color: #c5d6de;
-}
-.sidebar-footer .logout-link:hover {
-    color: var(--danger-color);
-    background-color: rgba(220, 53, 69, 0.1);
-}
-
-
-.dashboard-main-content {
-    margin-left: 260px; /* Mismo ancho que el sidebar */
-    flex-grow: 1;
-    padding: 1.5rem; /* Padding general para el contenido */
-    width: calc(100% - 260px); /* Asegurar que ocupe el resto del ancho */
-    min-height: 100vh; /* Para que el footer se mantenga abajo si el contenido es corto */
-    display: flex;
-    flex-direction: column;
-}
-
-.dashboard-top-header {
-    background-color: var(--surface-color);
-    padding: 0.8rem 1.5rem;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow-light);
-    margin-bottom: 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.dashboard-page-title {
-    font-size: 1.6rem;
-    color: var(--primary-color);
-    margin: 0;
-}
-
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 500;
-    color: var(--text-color);
-}
-
-.user-avatar {
-    font-size: 1.5rem;
-    color: var(--secondary-color);
-}
-
-/* Estilos para las tarjetas de estadísticas */
-/* ... (estilos existentes de .dashboard-grid-cards) ... */
-
-/* Comentar o eliminar los estilos .card-stat anteriores si ya no se usan 
-.card-stat {
-    background-color: var(--surface-color);
-    border-radius: var(--border-radius);
-    padding: 1.25rem;
-    box-shadow: var(--box-shadow-light);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    border-left: 4px solid var(--primary-color); 
-}
-
-.card-stat:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
-}
-
-.card-stat .text-xs {
-    font-size: 0.8rem;
-    font-weight: 700 !important; 
-    text-transform: uppercase !important;
-    margin-bottom: 0.25rem !important;
-}
-
-.card-stat .h5 {
-    font-size: 1.75rem !important; 
-    font-weight: 700 !important;
-    color: var(--text-color) !important;
-}
-
-.card-stat i {
-    color: #e0e0e0; 
-}
-
-.card-stat-success { border-left-color: var(--accent-color); }
-.card-stat-success .text-xs { color: var(--accent-color) !important; }
-
-.card-stat-warning { border-left-color: var(--warning-color); }
-.card-stat-warning .text-xs { color: var(--warning-color) !important; }
-
-.card-stat-info { border-left-color: var(--info-color); }
-.card-stat-info .text-xs { color: var(--info-color) !important; }
-
-.card-stat-danger { border-left-color: var(--danger-color); }
-.card-stat-danger .text-xs { color: var(--danger-color) !important; }
-*/
-
-/* Nuevos estilos para las tarjetas de estadísticas mejoradas */
-.stat-card {
-    background-color: var(--surface-color);
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow-light);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden; /* Para que el footer no se salga del borde redondeado */
+    height: 100%; /* Asegura que todas las tarjetas tengan la misma altura en una fila */
 }
 
 .stat-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+    box-shadow: var(--box-shadow);
 }
 
 .stat-card-body {
     padding: 1.5rem;
     display: flex;
     align-items: center;
-    flex-grow: 1;
+    flex-grow: 1; /* Permite que el cuerpo crezca y empuje el footer hacia abajo */
 }
 
 .stat-card-icon {
-    font-size: 2.8rem; /* Icono más grande */
-    margin-right: 1.2rem;
+    font-size: 2.5rem;
+    margin-right: 1.5rem;
     padding: 0.8rem;
-    border-radius: 50%; /* Círculo para el icono */
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 70px; /* Tamaño fijo para el círculo */
-    height: 70px; /* Tamaño fijo para el círculo */
-    color: #fff; /* Color del icono */
+    color: #fff;
 }
 
-.stat-card-content {
-    flex-grow: 1;
-}
+.stat-card-total .stat-card-icon { background-color: var(--primary-color); }
+.stat-card-open .stat-card-icon { background-color: var(--info-color); }
+.stat-card-progress .stat-card-icon { background-color: var(--warning-color); }
+.stat-card-closed .stat-card-icon { background-color: var(--accent-color); }
 
-.stat-card-title {
+.stat-card-content .stat-card-title {
     font-size: 0.9rem;
+    color: var(--color5);
+    margin-bottom: 0.25rem;
     font-weight: 500;
-    color: var(--color5); /* Gris claro para el título */
-    text-transform: uppercase;
-    margin-bottom: 0.3rem;
 }
 
-.stat-card-value {
-    font-size: 2rem;
+.stat-card-content .stat-card-value {
+    font-size: 1.75rem;
     font-weight: 700;
     color: var(--text-color);
 }
 
 .stat-card-footer {
-    display: block;
-    padding: 0.6rem 1.5rem;
     background-color: rgba(0,0,0,0.03);
+    padding: 0.75rem 1.5rem;
+    border-top: 1px solid var(--border-color);
     text-align: center;
-    font-size: 0.85rem;
-    color: var(--secondary-color);
-    text-decoration: none;
-    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.stat-card-footer:hover {
-    background-color: rgba(0,0,0,0.06);
+.stat-card-footer a {
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+.stat-card-footer a:hover {
     color: var(--primary-color);
 }
 
-.stat-card-footer i {
-    margin-left: 0.3rem;
-    transition: transform 0.2s ease;
+
+/* Estilos para los widgets modernos del dashboard */
+.widget.modern-widget {
+    background-color: var(--surface-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-light);
+    margin-bottom: 1.5rem; /* Espacio entre widgets */
 }
 
-.stat-card-footer:hover i {
-    transform: translateX(3px);
+.widget.modern-widget .widget-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-/* Colores específicos para cada tarjeta */
-.stat-card-total .stat-card-icon { background-color: var(--primary-color); }
-.stat-card-total .stat-card-footer { color: var(--primary-color); }
-.stat-card-total .stat-card-footer:hover { color: var(--header-gradient-start); }
+.widget.modern-widget .widget-header .widget-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--primary-color);
+    margin-bottom: 0;
+}
+.widget.modern-widget .widget-header .widget-title i {
+    margin-right: 0.5rem;
+    color: var(--secondary-color);
+}
 
 
-.stat-card-open .stat-card-icon { background-color: var(--info-color); } /* Azul info */
-.stat-card-open .stat-card-footer { color: var(--info-color); }
-.stat-card-open .stat-card-footer:hover { color: #1a78c2; } /* Un azul info más oscuro */
+.widget.modern-widget .widget-body {
+    padding: 1.25rem;
+}
+.widget.modern-widget .widget-body.no-padding {
+    padding: 0;
+}
 
-.stat-card-progress .stat-card-icon { background-color: var(--warning-color); } /* Naranja advertencia */
-.stat-card-progress .stat-card-footer { color: var(--warning-color); }
-.stat-card-progress .stat-card-footer:hover { color: #cc7a00; } /* Un naranja más oscuro */
+/* Lista de tickets moderna en widgets */
+.modern-ticket-list .list-group-item {
+    border-left: 0;
+    border-right: 0;
+    padding: 1rem 1.25rem;
+    transition: background-color 0.15s ease-in-out;
+}
+.modern-ticket-list .list-group-item:first-child {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-top: 0;
+}
+.modern-ticket-list .list-group-item:last-child {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom: 0;
+}
 
-.stat-card-closed .stat-card-icon { background-color: var(--accent-color); } /* Verde éxito */
-.stat-card-closed .stat-card-footer { color: var(--accent-color); }
-.stat-card-closed .stat-card-footer:hover { color: #388e3c; } /* Un verde más oscuro */
+.modern-ticket-list .list-group-item:hover {
+    background-color: #f8f9fa; /* Un hover sutil */
+}
+
+.modern-ticket-list .list-group-item h5 a {
+    color: var(--text-color);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+.modern-ticket-list .list-group-item h5 a:hover {
+    color: var(--primary-color);
+}
+
+.modern-ticket-list .list-group-item .text-muted {
+    font-size: 0.8rem;
+}
+
+/* Tabla moderna en widgets */
+.modern-table {
+    margin-bottom: 0; /* Quitar margen inferior si está dentro de un widget sin padding */
+}
+.modern-table th {
+    background-color: #f8f9fa; /* Fondo ligeramente gris para encabezados */
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--secondary-color);
+    border-bottom-width: 1px;
+}
+.modern-table td {
+    font-size: 0.85rem;
+    vertical-align: middle;
+}
+.modern-table td a {
+    font-weight: 500;
+}
+
+/* Feedback item moderno */
+.feedback-item-modern {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: #fdfdfd;
+}
+.feedback-item-modern strong {
+    font-size: 0.9rem;
+}
+.rating-stars .fa-star {
+    font-size: 0.9rem;
+}
 
 
-/* Ajustes responsivos para las nuevas tarjetas */
-@media (max-width: 1200px) { /* xl */
-    .stat-card-icon {
-        font-size: 2.5rem;
-        width: 60px;
-        height: 60px;
-        margin-right: 1rem;
+/* Clases de estado y prioridad (ya definidas en dashboard, pero centralizadas aquí) */
+.bg-Abierto { background-color: var(--info-color) !important; color: white !important; }
+.bg-En.Progreso { background-color: var(--warning-color) !important; color: var(--text-color) !important; } /* Ajuste para texto oscuro */
+.bg-Resuelto { background-color: var(--accent-color) !important; color: white !important; }
+.bg-Cerrado { background-color: #6c757d !important; color: white !important; } /* Gris para cerrado */
+.bg-En.Espera { background-color: #ffc107 !important; color: var(--text-color) !important; } /* Amarillo para En Espera */
+
+.bg-Muy.Grave { background-color: #dc3545 !important; color: white !important; } /* Rojo */
+.bg-Alto { background-color: #fd7e14 !important; color: white !important; } /* Naranja */
+.bg-Grave { background-color: #ffc107 !important; color: var(--text-color) !important; } /* Amarillo */
+.bg-Medio { background-color: #20c997 !important; color: white !important; } /* Turquesa */
+.bg-Leve { background-color: #17a2b8 !important; color: white !important; } /* Info azulado */
+.bg-Bajo { background-color: #6c757d !important; color: white !important; } /* Gris */
+
+
+/* Ajustes para el layout del dashboard con sidebar */
+body.has-sidebar {
+    display: flex;
+}
+
+.admin-sidebar {
+    width: 250px;
+    background-color: var(--color1); /* Azul noche muy oscuro */
+    color: var(--text-light-color);
+    padding: 1.5rem 1rem;
+    height: calc(100vh - 70px); /* Altura completa menos el header */
+    position: fixed;
+    top: 70px; /* Debajo del header */
+    left: 0;
+    overflow-y: auto;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    z-index: 1020; /* Debajo del header pero encima del contenido */
+}
+
+.admin-sidebar .sidebar-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.admin-sidebar .admin-avatar {
+    width: 80px;
+    height: 80px;
+}
+.admin-sidebar .nav-pills .nav-link {
+    color: #fff;
+    padding: 0.5rem 1rem;
+}
+.admin-sidebar .nav-pills .nav-link.active,
+.admin-sidebar .nav-pills .nav-link:hover {
+    background-color: var(--secondary-color);
+    color: #fff;
+}
+.admin-sidebar .sidebar-footer {
+    position: absolute;
+    bottom: 1rem;
+    width: calc(100% - 2rem);
+    text-align: center;
+}
+
+/* ========================================= */
+/* 13. PROGRESO DE TICKETS */
+/* ========================================= */
+
+/* Barra de progreso en tarjetas de tickets */
+.progress {
+    height: 0.5rem;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.1);
+    margin-top: 0.5rem;
+}
+
+.progress-bar {
+    height: 100%;
+    transition: width 0.4s ease;
+    font-size: 0.75rem;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Colores específicos para cada estado de ticket */
+.bg-Abierto { background-color: var(--info-color) !important; }
+.bg-En.Progreso { background-color: var(--warning-color) !important; }
+.bg-Resuelto { background-color: var(--accent-color) !important; }
+.bg-Cerrado { background-color: #6c757d !important; } /* Gris para cerrado */
+.bg-En.Espera { background-color: #ffc107 !important; } /* Amarillo para En Espera */
+
+/* ========================================= */
+/* 14. REPORTES */
+/* ========================================= */
+
+/* Estilos generales para los reportes */
+.report-container {
+    background-color: var(--surface-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-light);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.report-header {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.report-filters {
+    margin-bottom: 1.5rem;
+}
+
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.report-table th,
+.report-table td {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.report-table th {
+    background-color: #f8f9fa;
+    font-weight: 500;
+    color: var(--secondary-color);
+}
+
+.report-table tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.025);
+}
+
+/* ========================================= */
+/* 15. SETUP/INSTALACIÓN */
+/* ========================================= */
+
+/* Estilos para la página de instalación/configuración */
+.setup-container {
+    background-color: var(--surface-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-light);
+    padding: 2rem;
+    margin: 2rem 0;
+}
+
+.setup-header {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.setup-step {
+    margin-bottom: 2rem;
+}
+
+.setup-step-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--secondary-color);
+    margin-bottom: 0.5rem;
+}
+
+.setup-step-content {
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--box-shadow);
+}
+
+/* ========================================= */
+/* 16. UTILIDADES */
+/* ========================================= */
+
+/* Clases de utilidad personalizadas */
+.m-t-1 { margin-top: 1rem !important; }
+.m-b-1 { margin-bottom: 1rem !important; }
+.p-1 { padding: 0.75rem !important; }
+.text-center { text-align: center !important; }
+.text-right { text-align: right !important; }
+.text-left { text-align: left !important; }
+
+/* Ocultar elementos */
+.d-none { display: none !important; }
+
+/* Flexbox utilities */
+.d-flex { display: flex !important; }
+.flex-column { flex-direction: column !important; }
+.align-items-center { align-items: center !important; }
+.justify-content-center { justify-content: center !important; }
+
+/* Espaciado para el sidebar (ajuste fino) */
+.admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100vh;
+    background-color: var(--color1);
+    padding: 1rem;
+    overflow-y: auto;
+    z-index: 1000;
+}
+.admin-sidebar .sidebar-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.admin-sidebar .admin-avatar {
+    width: 80px;
+    height: 80px;
+}
+.admin-sidebar .nav-pills .nav-link {
+    color: #fff;
+    padding: 0.5rem 1rem;
+}
+.admin-sidebar .nav-pills .nav-link.active,
+.admin-sidebar .nav-pills .nav-link:hover {
+    background-color: var(--secondary-color);
+    color: #fff;
+}
+.admin-sidebar .sidebar-footer {
+    position: absolute;
+    bottom: 1rem;
+    width: calc(100% - 2rem);
+    text-align: center;
+}
+
+/* ========================================= */
+/* SIDEBAR PROFESIONAL - NUEVO */
+/* ========================================= */
+
+/* Estilos generales para el nuevo sidebar profesional */
+.admin-sidebar-nueva {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100vh;
+    background-color: var(--color1);
+    color: var(--text-light-color);
+    padding: 1rem;
+    overflow-y: auto;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+}
+
+/* Ocultar el sidebar fuera de pantalla (por defecto en móviles) */
+.admin-sidebar-nueva.hidden {
+    transform: translateX(-100%);
+}
+
+/* Estilos para el contenido del sidebar */
+.admin-sidebar-nueva .sidebar-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.admin-sidebar-nueva .admin-avatar {
+    width: 80px;
+    height: 80px;
+}
+.admin-sidebar-nueva .nav-pills .nav-link {
+    color: #fff;
+    padding: 0.5rem 1rem;
+}
+.admin-sidebar-nueva .nav-pills .nav-link.active,
+.admin-sidebar-nueva .nav-pills .nav-link:hover {
+    background-color: var(--secondary-color);
+    color: #fff;
+}
+.admin-sidebar-nueva .sidebar-footer {
+    position: absolute;
+    bottom: 1rem;
+    width: calc(100% - 2rem);
+    text-align: center;
+}
+
+/* Botón flotante para abrir/cerrar el sidebar */
+.btn-toggle-sidebar {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 1050; /* Sobre el contenido pero debajo del header */
+}
+
+.btn-toggle-sidebar:hover {
+    background-color: var(--secondary-color);
+}
+
+/* ========================================= */
+/* FIN SIDEBAR PROFESIONAL */
+/* ========================================= */
+
+/* Estilos modernos para seguimiento de ticket */
+.seguimiento-modern {
+    max-width: 600px;
+    margin: 0 auto;
+    background: var(--surface-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-light);
+    padding: 2rem 1.5rem 1.5rem 1.5rem;
+    margin-top: 2rem;
+}
+.seguimiento-modern .section-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+.seguimiento-modern .section-title {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.search-form.modern-search-form {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+.search-form.modern-search-form .form-group {
+    flex: 1 1 200px;
+    margin-bottom: 0;
+}
+.search-form.modern-search-form .form-control {
+    min-width: 180px;
+}
+
+.ticket-card.modern-ticket-card {
+    background: #f8f9fa;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-light);
+    margin-top: 1.5rem;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+.ticket-header.modern-ticket-header {
+    background: var(--primary-color);
+    color: #fff;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.1rem;
+}
+.ticket-header .ticket-id {
+    font-weight: 600;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.ticket-header .ticket-estado {
+    font-size: 1rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.12);
+    border-radius: 1rem;
+    padding: 0.25rem 0.75rem;
+}
+.ticket-body.modern-ticket-body {
+    padding: 1.25rem 1.5rem 1rem 1.5rem;
+}
+.info-section.modern-info-section {
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+}
+.info-section.modern-info-section p {
+    margin-bottom: 0.3rem;
+}
+.descripcion-contenido {
+    background: #fff;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    padding: 0.75rem 1rem;
+    font-size: 0.98rem;
+    color: var(--text-color);
+    margin-top: 0.25rem;
+    white-space: pre-line;
+}
+.ticket-footer.modern-ticket-footer {
+    background: #f1f3f4;
+    color: var(--color5);
+    text-align: center;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Badge de estado en header */
+.ticket-header .ticket-estado {
+    background: var(--accent-color, #4caf50);
+    color: #fff;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+}
+.ticket-header .ticket-estado.estado-abierto { background: var(--info-color); }
+.ticket-header .ticket-estado.estado-en-progreso { background: var(--warning-color); color: var(--text-color); }
+.ticket-header .ticket-estado.estado-resuelto { background: var(--accent-color); }
+.ticket-header .ticket-estado.estado-cerrado { background: #6c757d; }
+.ticket-header .ticket-estado.estado-esperando-respuesta { background: #ffc107; color: var(--text-color); }
+
+/* Responsive */
+@media (max-width: 600px) {
+    .seguimiento-modern {
+        padding: 1rem 0.5rem 1rem 0.5rem;
     }
-    .stat-card-value {
-        font-size: 1.8rem;
+    .ticket-header.modern-ticket-header, .ticket-body.modern-ticket-body, .ticket-footer.modern-ticket-footer {
+        padding-left: 0.7rem;
+        padding-right: 0.7rem;
     }
 }
 
-@media (max-width: 576px) { /* sm */
-    .stat-card-body {
-        flex-direction: column;
-        align-items: flex-start;
-        text-align: left;
-    }
-    .stat-card-icon {
-        margin-right: 0;
-        margin-bottom: 0.8rem;
-        width: 50px; /* Más pequeño en móviles */
-        height: 50px;
-        font-size: 2rem;
-    }
-    .stat-card-title {
-        font-size: 0.85rem;
-    }
-    .stat-card-value {
-        font-size: 1.7rem;
-    }
+/* --- Fix nav-pills sidebar vertical --- */
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0;
 }
-
-/* ... (resto de los estilos del dashboard y widgets) ... */
+.admin-sidebar .nav-pills {
+    flex-direction: column;
+    gap: 0.25rem;
+}
+.admin-sidebar .nav-pills .nav-link {
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: var(--border-radius);
+    margin-bottom: 0.15rem;
+    background: none;
+    transition: background 0.2s, color 0.2s;
+}
+.admin-sidebar .nav-pills .nav-link i {
+    margin-right: 0.7em;
+    font-size: 1.1em;
+}
+.admin-sidebar .nav-pills .nav-link.active,
+.admin-sidebar .nav-pills .nav-link:hover {
+    background-color: var(--secondary-color);
+    color: #fff;
+    text-decoration: none;
+}
+.admin-sidebar .nav-pills .nav-link:focus {
+    outline: 2px solid var(--secondary-color);
+    outline-offset: 2px;
+}

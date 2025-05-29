@@ -15,7 +15,12 @@ if (isset($_GET['numero_ticket'])) {
     if (!empty($numero_ticket_consultado)) {
         if ($conn) { // $conn viene de config.php
             // Corregido: d.nombre a d.nombre_departamento
-            $sql = "SELECT t.*, d.nombre_departamento AS nombre_departamento 
+            $sql = "SELECT t.*, 
+                        t.nombre_solicitante AS nombre_completo, 
+                        t.email_solicitante AS email, 
+                        t.telefono_solicitante AS telefono, 
+                        t.ultima_actualizacion AS fecha_actualizacion, 
+                        d.nombre_departamento AS nombre_departamento 
                     FROM tickets t 
                     LEFT JOIN departamentos d ON t.id_departamento = d.id 
                     WHERE t.id = ?";
@@ -56,29 +61,24 @@ if (isset($_GET['numero_ticket'])) {
     <?php include_once __DIR__ . '/../core/templates/sidebar_public.php'; ?>
 
     <div class="dashboard-main-content">
-        <?php // Eliminamos: include_once __DIR__ . '/../core/templates/header.php'; ?>
-
         <main class="container-main seguimiento-modern page-content">
             <div class="section-header">
                 <h1 class="section-title"><i class="fas fa-search-location"></i> <?php echo htmlspecialchars($page_title); ?></h1>
             </div>
-
             <form action="<?php echo htmlspecialchars(BASE_URL . 'public/seguimiento.php'); ?>" method="GET" class="search-form modern-search-form needs-validation" novalidate>
-                <div class="form-group">
-                    <input type="text" id="numero_ticket" name="numero_ticket" class="form-control" placeholder="Ingrese su número de ticket" value="<?php echo htmlspecialchars($numero_ticket_consultado); ?>" required>
+                <div class="form-group mb-0">
+                    <input type="text" id="numero_ticket" name="numero_ticket" class="form-control" placeholder="Ingrese su número de ticket" value="<?php echo htmlspecialchars($numero_ticket_consultado); ?>" required autofocus>
                     <div class="invalid-feedback">Por favor, ingrese un número de ticket.</div>
                 </div>
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-search"></i> Consultar Estado
                 </button>
             </form>
-
             <?php if (!empty($error_message)): ?>
-                <div class="alert alert-danger modern-alert">
+                <div class="alert alert-danger modern-alert mt-3">
                     <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error_message); ?>
                 </div>
             <?php endif; ?>
-
             <?php if ($ticket_info): ?>
                 <div class="ticket-card modern-ticket-card">
                     <div class="ticket-header modern-ticket-header">
@@ -136,21 +136,14 @@ if (isset($_GET['numero_ticket'])) {
                         <p>Si tiene alguna consulta adicional, por favor contacte con el administrador.</p>
                     </div>
                 </div>
-            <?php elseif (empty($error_message) && !empty($numero_ticket_consultado)):
-            // Este bloque se muestra si se buscó un ticket pero no se encontró y no hubo otro error.
-            // El mensaje de "No se encontró..." ya se maneja en $error_message.
-            // Podríamos dejarlo vacío o añadir un mensaje genérico si $error_message está vacío.
-            ?>
-            <?php elseif (empty($numero_ticket_consultado) && empty($error_message)):
-            // Mensaje inicial antes de cualquier búsqueda
-            ?>
-                <div class="info-section modern-info-section" style="text-align: center; padding: 30px 20px;">
+            <?php elseif (empty($error_message) && !empty($numero_ticket_consultado)): ?>
+            <?php elseif (empty($numero_ticket_consultado) && empty($error_message)): ?>
+                <div class="info-section modern-info-section text-center" style="padding: 30px 20px;">
                     <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
                     <p>Ingrese su número de ticket para ver su estado y detalles.</p>
                 </div>
             <?php endif; ?>
         </main>
-        
         <?php // Eliminamos: include_once __DIR__ . '/../core/templates/footer.php'; ?>
     </div>
 

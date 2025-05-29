@@ -56,18 +56,7 @@ if (isset($_SESSION['ticket_error'])) {
                     <label for="nombre_completo">Nombre Completo:</label>
                     <input type="text" id="nombre_completo" name="nombre_completo" class="form-control" required>
                     <div class="invalid-feedback">Por favor, ingrese su nombre completo.</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Correo Electrónico:</label>
-                    <input type="email" id="email" name="email" class="form-control" required>
-                    <div class="invalid-feedback">Por favor, ingrese un correo electrónico válido.</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="telefono">Teléfono (Opcional):</label>
-                    <input type="tel" id="telefono" name="telefono" class="form-control">
-                </div>
+                </div> <!-- cierre del form-group de Nombre Completo -->
 
                 <div class="form-group">
                     <label for="id_departamento">Departamento:</label>
@@ -94,55 +83,11 @@ if (isset($_SESSION['ticket_error'])) {
                     <div class="invalid-feedback">Por favor, describa el problema.</div>
                 </div>
 
-                <div class="form-group">
-                    <label for="archivo_adjunto">Adjuntar Archivo (Opcional):</label>
-                    <input type="file" id="archivo_adjunto" name="archivo_adjunto" class="form-control-file">
-                    <small class="form-text text-muted">Tamaño máximo: 5MB. Tipos permitidos: JPG, PNG, PDF, DOC, DOCX, TXT.</small>
-                </div>
-                
-                <div class="form-group">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="" id="terminos" required>
-                        <label class="form-check-label" for="terminos">
-                            Acepto los <a href="#" data-toggle="modal" data-target="#terminosModal">Términos y Condiciones</a>.
-                        </label>
-                        <div class="invalid-feedback">Debe aceptar los términos y condiciones.</div>
-                    </div>
-                </div>
-
                 <button type="submit" class="btn btn-primary">Enviar Ticket</button>
             </form>
         </main>
 
         <?php // Eliminamos: include_once __DIR__ . '/../core/templates/footer.php'; ?>
-        
-        <!-- Modal Términos y Condiciones (copiado de footer.php) -->
-        <div class="modal fade" id="modalTerminos" tabindex="-1" aria-labelledby="modalTerminosLabel" aria-hidden="true">
-          <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="modalTerminosLabel">Términos y Condiciones</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-              </div>
-              <div class="modal-body">
-                <p>
-                  El uso de este sistema está destinado exclusivamente para la gestión de tickets de soporte técnico de la Municipalidad Provincial de Canchis.<br>
-                  Toda la información registrada será tratada conforme a las políticas de privacidad institucionales.
-                </p>
-                <ul>
-                  <li>El acceso está restringido a usuarios autorizados.</li>
-                  <li>No comparta sus credenciales de acceso.</li>
-                  <li>El mal uso del sistema puede ser sancionado.</li>
-                </ul>
-                <p>Para más información, contacte al área de TI.</p>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
     </div>
 
     <!-- Bootstrap 5.3.3 JS Bundle (incluye Popper) -->

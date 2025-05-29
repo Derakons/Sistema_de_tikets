@@ -1,9 +1,8 @@
 <?php
 require_once '../core/config.php';
 require_once '../core/functions.php';
-
 // Proteger esta página - solo administradores
-// proteger_pagina_admin(); // Descomentar cuando el sistema de autenticación esté implementado
+proteger_pagina_admin(); // Descomentar para asegurar acceso solo a admins
 
 $page_title = "Dashboard Administrativo";
 
@@ -178,9 +177,11 @@ if ($result_feedback) {
                             <div class="stat-card-value"><?php echo $stats['total_tickets']; ?></div>
                         </div>
                     </div>
-                    <a href="<?php echo BASE_URL; ?>admin/index.php" class="stat-card-footer">
-                        Ver Detalles <i class="fas fa-arrow-circle-right"></i>
-                    </a>
+                    <div class="stat-card-footer">
+                        <a href="<?php echo BASE_URL; ?>admin/index.php" class="btn btn-light btn-sm w-100 text-center" aria-label="Ver detalles de todos los tickets">
+                            <i class="fas fa-arrow-circle-right me-1"></i> Ver Detalles
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -196,9 +197,11 @@ if ($result_feedback) {
                             <div class="stat-card-value"><?php echo $stats['por_estado']['Abierto'] ?? 0; ?></div>
                         </div>
                     </div>
-                    <a href="<?php echo BASE_URL; ?>admin/index.php?status=Abierto" class="stat-card-footer">
-                        Ver Detalles <i class="fas fa-arrow-circle-right"></i>
-                    </a>
+                     <div class="stat-card-footer">
+                        <a href="<?php echo BASE_URL; ?>admin/index.php?status=Abierto" class="btn btn-light btn-sm w-100 text-center" aria-label="Ver tickets abiertos">
+                            <i class="fas fa-arrow-circle-right me-1"></i> Ver Detalles
+                        </a>
+                    </div>
                 </div>
             </div>
             
@@ -214,9 +217,11 @@ if ($result_feedback) {
                             <div class="stat-card-value"><?php echo $stats['por_estado']['En Progreso'] ?? 0; ?></div>
                         </div>
                     </div>
-                     <a href="<?php echo BASE_URL; ?>admin/index.php?status=En Progreso" class="stat-card-footer">
-                        Ver Detalles <i class="fas fa-arrow-circle-right"></i>
-                    </a>
+                     <div class="stat-card-footer">
+                        <a href="<?php echo BASE_URL; ?>admin/index.php?status=En Progreso" class="btn btn-light btn-sm w-100 text-center" aria-label="Ver tickets en progreso">
+                            <i class="fas fa-arrow-circle-right me-1"></i> Ver Detalles
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -232,9 +237,11 @@ if ($result_feedback) {
                             <div class="stat-card-value"><?php echo $stats['por_estado']['Cerrado'] ?? 0; ?></div>
                         </div>
                     </div>
-                    <a href="<?php echo BASE_URL; ?>admin/index.php?status=Cerrado" class="stat-card-footer">
-                        Ver Detalles <i class="fas fa-arrow-circle-right"></i>
-                    </a>
+                    <div class="stat-card-footer">
+                        <a href="<?php echo BASE_URL; ?>admin/index.php?status=Cerrado" class="btn btn-light btn-sm w-100 text-center" aria-label="Ver tickets cerrados">
+                            <i class="fas fa-arrow-circle-right me-1"></i> Ver Detalles
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -245,9 +252,11 @@ if ($result_feedback) {
             <div class="col-lg-7 mb-4">
                 <!-- Widget de Tickets Recientes -->
                 <div class="widget modern-widget">
-                    <div class="widget-header">
+                    <div class="widget-header d-flex justify-content-between align-items-center">
                         <h3 class="widget-title"><i class="fas fa-history"></i> Tickets Recientes</h3>
-                        <a href="<?php echo BASE_URL; ?>admin/index.php?filter=recientes" class="btn btn-sm btn-outline-primary">Ver Todos</a>
+                        <a href="<?php echo BASE_URL; ?>admin/index.php?filter=recientes" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-list me-1"></i> Ver Todos
+                        </a>
                     </div>
                     <div class="widget-body no-padding">
                         <?php if (!empty($tickets_recientes)): ?>
@@ -255,7 +264,12 @@ if ($result_feedback) {
                                 <?php foreach ($tickets_recientes as $ticket): ?>
                                     <li class="list-group-item">
                                         <div class="d-flex w-100 justify-content-between">
-                                            <h5 class="mb-1"><a href="<?php echo BASE_URL; ?>public/seguimiento.php?ticket_id=<?php echo htmlspecialchars($ticket['id']); ?>" target="_blank">#<?php echo htmlspecialchars($ticket['id']); ?> - <?php echo htmlspecialchars(limitar_texto($ticket['asunto'], 40)); ?></a></h5>
+                                            <h5 class="mb-1">
+                                                <a href="<?php echo BASE_URL; ?>admin/index.php?edit_id=<?php echo htmlspecialchars($ticket['id']); ?>" 
+                                                   data-bs-toggle="tooltip" title="Editar ticket #<?php echo htmlspecialchars($ticket['id']); ?>" aria-label="Editar ticket #<?php echo htmlspecialchars($ticket['id']); ?>">
+                                                    #<?php echo htmlspecialchars($ticket['id']); ?> - <?php echo htmlspecialchars(limitar_texto($ticket['asunto'], 40)); ?>
+                                                </a>
+                                            </h5>
                                             <small class="text-muted"><?php echo tiempo_transcurrido($ticket['fecha_creacion']); ?></small>
                                         </div>
                                         <p class="mb-1 text-muted small">
@@ -280,14 +294,16 @@ if ($result_feedback) {
 
                 <!-- Widget de Tickets Pendientes -->
                 <div class="widget modern-widget mt-4">
-                    <div class="widget-header">
+                    <div class="widget-header d-flex justify-content-between align-items-center">
                         <h3 class="widget-title"><i class="fas fa-exclamation-circle"></i> Tickets Pendientes (Abiertos/En Progreso)</h3>
-                        <a href="<?php echo BASE_URL; ?>admin/index.php?filter=pendientes" class="btn btn-sm btn-outline-warning">Ver Todos</a>
+                        <a href="<?php echo BASE_URL; ?>admin/index.php?filter=pendientes" class="btn btn-sm btn-outline-warning">
+                            <i class="fas fa-list me-1"></i> Ver Todos
+                        </a>
                     </div>
                     <div class="widget-body no-padding">
                         <?php if (!empty($tickets_pendientes)): ?>
                             <div class="table-responsive">
-                                <table class="table table-hover modern-table">
+                                <table class="table table-hover modern-table table-sm">
                                     <thead>
                                         <tr>
                                             <th>ID</th>
@@ -301,7 +317,12 @@ if ($result_feedback) {
                                     <tbody>
                                         <?php foreach ($tickets_pendientes as $ticket): ?>
                                             <tr>
-                                                <td><a href="<?php echo BASE_URL; ?>public/seguimiento.php?ticket_id=<?php echo htmlspecialchars($ticket['id']); ?>" target="_blank">#<?php echo htmlspecialchars($ticket['id']); ?></a></td>
+                                                <td>
+                                                    <a href="<?php echo BASE_URL; ?>public/seguimiento.php?ticket_id=<?php echo htmlspecialchars($ticket['id']); ?>" 
+                                                       data-bs-toggle="tooltip" title="Ver ticket #<?php echo htmlspecialchars($ticket['id']); ?>" aria-label="Ver ticket #<?php echo htmlspecialchars($ticket['id']); ?>">
+                                                        #<?php echo htmlspecialchars($ticket['id']); ?>
+                                                    </a>
+                                                </td>
                                                 <td><?php echo htmlspecialchars(limitar_texto($ticket['asunto'], 30)); ?></td>
                                                 <td><?php echo htmlspecialchars($ticket['nombre_usuario'] ?? 'Usuario Desconocido'); ?></td>
                                                 <td><span class="badge rounded-pill bg-<?php echo obtener_clase_estado($ticket['estado']); ?>"><?php echo htmlspecialchars($ticket['estado']); ?></span></td>
@@ -318,7 +339,10 @@ if ($result_feedback) {
                                                         </select>
                                                         <input type="hidden" name="quick_update" value="1">
                                                     </form>
-                                                    <a href="<?php echo BASE_URL; ?>admin/index.php?view_ticket=<?php echo $ticket['id']; ?>" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
+                                                    <a href="<?php echo BASE_URL; ?>admin/index.php?edit_id=<?php echo htmlspecialchars($ticket['id']); ?>" 
+                                                       class="btn btn-sm btn-warning" data-bs-toggle="tooltip" title="Editar ticket <?php echo htmlspecialchars($ticket['id']); ?>" aria-label="Editar ticket <?php echo htmlspecialchars($ticket['id']); ?>">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -336,7 +360,7 @@ if ($result_feedback) {
             <div class="col-lg-5 mb-4">
                 <!-- Widget de Feedback Reciente -->
                 <div class="widget modern-widget">
-                    <div class="widget-header">
+                    <div class="widget-header d-flex justify-content-between align-items-center">
                         <h3 class="widget-title"><i class="fas fa-comments"></i> Feedback Reciente</h3>
                     </div>
                     <div class="widget-body">
@@ -372,7 +396,7 @@ if ($result_feedback) {
 
                 <!-- Widget de Tickets por Prioridad -->
                 <div class="widget modern-widget mt-4">
-                    <div class="widget-header">
+                    <div class="widget-header d-flex justify-content-between align-items-center">
                         <h3 class="widget-title"><i class="fas fa-exclamation-triangle"></i> Tickets por Prioridad</h3>
                     </div>
                     <div class="widget-body">
@@ -383,12 +407,14 @@ if ($result_feedback) {
                             <ul class="list-group list-group-flush">
                             <?php foreach ($prioridades_ordenadas as $prioridad_nombre): ?>
                                 <?php if (isset($stats['por_prioridad'][$prioridad_nombre]) && $stats['por_prioridad'][$prioridad_nombre] > 0): ?>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="<?php echo BASE_URL; ?>admin/index.php?filter=prioridad=<?php echo urlencode($prioridad_nombre); ?>"
+                                   class="list-group-item d-flex justify-content-between align-items-center text-decoration-none list-group-item-action"
+                                   aria-label="Filtrar prioridad <?php echo htmlspecialchars($prioridad_nombre); ?>">
                                     <?php echo htmlspecialchars($prioridad_nombre); ?>
                                     <span class="badge bg-<?php echo obtener_clase_prioridad($prioridad_nombre); ?> rounded-pill text-dark">
                                         <?php echo $stats['por_prioridad'][$prioridad_nombre]; ?>
                                     </span>
-                                </li>
+                                </a>
                                 <?php endif; ?>
                             <?php endforeach; ?>
                             </ul>

@@ -100,7 +100,7 @@ function logoutAdmin() {
  */
 function obtener_departamentos($conn) {
     $departamentos = [];
-    $sql = "SELECT id, nombre_departamento FROM departamentos ORDER BY nombre_departamento ASC";
+    $sql = "SELECT id, nombre_departamento AS nombre FROM departamentos ORDER BY nombre_departamento ASC";
     $result = $conn->query($sql);
     if ($result && $result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
